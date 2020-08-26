@@ -7,7 +7,7 @@ In production, it uses:
 
 ---
 
-## Installation
+# 0. Installation
 
 ```bash
 # Install the Serverless CLI
@@ -28,7 +28,7 @@ sls dynamodb install
 
 ---
 
-## 1. Usage
+# 1. Usage
 
 ### 1.1 Development
 
@@ -69,7 +69,7 @@ Serverless: Configuring Authorization: user verify-token
 Serverless: Offline listening on http://localhost:3000
 ```
 
-### Running Unit Tests
+# 2. Running Unit Tests
 
 ```bash
 npm run test (or npm test)
@@ -94,7 +94,7 @@ Snapshots:   0 total
 Time:        2.009 s
 ```
 
-## Running local tests
+# 3. Running local tests
 
 PRE-REQUISIT: To be able to test locally, be sure that serverless offline and dynamodb local is running as described in step  1.1 Developement
 
@@ -104,12 +104,9 @@ npm run
 
 Run in another terminal (or using your favorite HTTP Client - Postman for example) the following commands:
 
-
-# Usage
-
 You can register a user, login, get user datail, or update user information using following URL:
 
-##  Register a user
+##  3.1. Register a user
 
 ```bash
 Request: POST /register
@@ -140,9 +137,9 @@ curl --header "Content-Type: application/json" --request POST --data '{"firstNam
     "updatedAt": 1536717884934
   }
 }
-````
+```
 
-### Log-in user
+## 3.2. Log-in user
 
 ```bash
  Request: POST /login
@@ -174,7 +171,7 @@ curl --header "Content-Type: application/json" --request POST --data '{"email": 
 }
 ```
 
-### Get User Details
+## 3.3. Get User Details
 
 ```json
 # Request: GET /user
@@ -204,7 +201,7 @@ curl --header "Content-Type: application/json" -H "Authorization: Bearer eyJhbGc
 ```
 
 
-### Update User Information
+## 3.4. Update User Information
 
 ```json
 Request: PUT /user
@@ -238,7 +235,7 @@ curl --header "Content-Type: application/json" -H "Authorization: Bearer eyJhbGc
 }
 ```
 
-### Production
+# 4. Production
 
 __1. Setup your AWS credentials__
 
