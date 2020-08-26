@@ -3,8 +3,6 @@
 A [Serverless](https://serverless.com/) REST API boilerplate for authenticating with email/password over JWT (JSON Web Tokens) using
 AWS DynamoDB and DynamoDB local as database
 
-In production, it uses:
-
 ---
 
 # 0. Installation
@@ -38,7 +36,7 @@ You can use Serverless Offline while you develop, which starts a local DynamoDB 
 npm start
 
 # OR to use env.staging.yml environment variables:
-# yarn start --STAGE staging
+# npm start --STAGE staging
 ```
 
 Expected Result: (BE SURE that DynamoDB local is installed and running)
@@ -99,12 +97,9 @@ Time:        2.009 s
 PRE-REQUISIT: To be able to test locally, be sure that serverless offline and dynamodb local is running as described in step  1.1 Developement
 
 ```bash
-npm run 
+npm start (if it is no already running) 
 ```
-
 Run in another terminal (or using your favorite HTTP Client - Postman for example) the following commands:
-
-You can register a user, login, get user datail, or update user information using following URL:
 
 ##  3.1. Register a user
 
