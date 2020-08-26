@@ -1,0 +1,120 @@
+service: serverless-jwt-auth
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  env: ${file(env.${opt:STAGE, 'prod'}.yml), file(env.yml)}
+  dynamodb:
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+      seed: true
+    stages:
+      - test
+    seed:
+      domain:
+        sources:
+          - table: ${self:service}-${self:provider.stage}-users
+            sources: [./database/seeds/users.json]
+          # - table: ${self:service}-${self:provider.stage}-tasks
+          #   sources: [./database/tasks.json]
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:STAGE, self:custom.env.STAGE}
+  region: ${self:custom.env.REGION}
+
+  environment:
+    JWT_SECRET: ${self:custom.env.JWT_SECRET}
+    TABLENAME_USERS: ${self:service}-${self:provider.stage}-users
+    TABLENAME_TASKS: ${self:service}-${self:provider.stage}-tasks
+    
+  iamRoleStatements:
+  - Effect: Allow
+    Action:
+      - dynamodb:Query
+      - dynamodb:Scan
+      - dynamodb:GetItem
+      - dynamodb:PutItem
+      - dynamodb:UpdateItem
+      - dynamodb:DeleteItem
+    Resource:
+      # DynamoDB tables to provide access to
+      - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS}"
+      - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_TASKS}"
+
+functions:
+
+  verify-token:
+    handler: app/Middleware/VerifyToken.auth
+
+  login:
+    handler: app/Handlers/Users.login
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+
+  register:
+    handler: app/Handlers/Users.register
+    events:
+      - http:
+          path: register
+          method: post
+          cors: true
+
+  user:
+    handler: app/Handlers/Users.user
+    events:
+      - http:
+          path: user
+          method: get
+          cors: true
+          authorizer: verify-token
+          
+  userUpdate:
+    handler: app/Handlers/Users.update
+    events:
+      - http:
+          path: user
+          method: put
+          cors: true
+          authorizer: verify-token
+
+resources:
+  Resources:
+    UsersDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      # DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.TABLENAME_USERS}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          # - AttributeName: email
+          #   KeyType: RANGE
+        GlobalSecondaryIndexes:
+        - IndexName: myGSIbyEmail
+          KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+          Projection:
+            ProjectionType: 'ALL'
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

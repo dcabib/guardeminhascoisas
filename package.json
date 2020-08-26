@@ -1,0 +1,27 @@
+{
+  "name": "serverless-jwt-auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "start": "sls offline start --migrate --skipCacheInvalidation",
+    "test": "JWT_SECRET=123Abc789XYZ jest",
+    "deploy": "sls deploy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.739.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^8.5.1",
+    "middy": "^0.36.0",
+    "uuid": "^8.3.0",
+    "validator": "^13.1.1"
+  },
+  "devDependencies": {
+    "jest": "^26.4.2",
+    "serverless-dynamodb-local": "^0.2.39",
+    "serverless-offline": "^3.20.3"
+  }
+}
