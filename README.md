@@ -1,13 +1,9 @@
-# Serverless JWT Auth Boilerplate (⚠️ Work In Progress)
+# Serverless JWT Auth Boilerplate by Daniel Abib
 
-A [Serverless](https://serverless.com/) REST API boilerplate for authenticating with email/password over JWT (JSON Web Tokens). 
+A [Serverless](https://serverless.com/) REST API boilerplate for authenticating with email/password over JWT (JSON Web Tokens) using
+AWS DynamoDB and DynamoDB local as database
 
 In production, it uses:
-
-- [AWS Lambda](https://aws.amazon.com/lambda/) for computing
-- [AWS Dynamodb](https://aws.amazon.com/dynamodb‎) for database storage
-- [AWS Cloudformation](https://aws.amazon.com/cloudformation/) to provision the AWS resources
-- [AWS S3](https://aws.amazon.com/s3/) for object storage (storing the code)
 
 ---
 
@@ -15,16 +11,19 @@ In production, it uses:
 
 ```bash
 # Install the Serverless CLI
-yarn global add serverless
+npm install serverless
 
 # Clone the repo
-git clone https://github.com/mcnamee/serverless-jwt-auth.git serverless-jwt-auth
+git clone https://github.com/dcabib/serverless-jwt-auth serverless-jwt-auth
 
 # Install dependencies
-cd serverless-jwt-auth && yarn install
+cd serverless-jwt-auth && npm install
 
-# Add your environment variables (and update the JWT secret)
-cp env.example.yml env.prod.yml
+# Install dynamodb local
+sls dynamodb install
+
+# Edit (if needed) your environment variables (and update the JWT secret)
+(optional) env.prod.yml
 ```
 
 ---
@@ -36,10 +35,37 @@ cp env.example.yml env.prod.yml
 You can use Serverless Offline while you develop, which starts a local DynamoDB instance (data is reset on each start)
 
 ```bash
-yarn start
+npm start
 
 # OR to use env.staging.yml environment variables:
 # yarn start --STAGE staging
+```
+
+
+```bash
+Dynamodb Local Started, Visit: http://localhost:8000/shell
+Serverless: DynamoDB - created table serverless-jwt-auth-test-users
+Seed running complete for table: serverless-jwt-auth-test-users
+Serverless: Starting Offline: undefined/undefined.
+
+Serverless: Routes for verify-token:
+Serverless: (none)
+
+Serverless: Routes for login:
+Serverless: POST /login
+
+Serverless: Routes for register:
+Serverless: POST /register
+
+Serverless: Routes for user:
+Serverless: GET /user
+Serverless: Configuring Authorization: user verify-token
+
+Serverless: Routes for userUpdate:
+Serverless: PUT /user
+Serverless: Configuring Authorization: user verify-token
+
+Serverless: Offline listening on http://localhost:3000
 ```
 
 ### Tests
