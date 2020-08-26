@@ -9,7 +9,7 @@ AWS DynamoDB and DynamoDB local as database
 
 ```bash
 # Install the Serverless CLI
-npm install serverless
+npm install serverless (maybe sudo is required)
 
 # Clone the repo
 git clone https://github.com/dcabib/serverless-jwt-auth serverless-jwt-auth
