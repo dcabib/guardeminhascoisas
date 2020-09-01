@@ -37,15 +37,61 @@ module.exports.userByEmail = email =>
  * Get a user by ID
  * @param str id
  */
-module.exports.userById = id => 
-DB.get({ TableName, Key: { id } }).promise()
+module.exports.userById = id => {
+ 
+console.debug ("*** Helper - User - userById - started");
+console.debug ("*** Helper - User - id: ", id);
+
+return DB.get({ TableName, Key: { id } }).promise()
   .then((res) => {
     // Return the user
     if (res && res.Item) {
-      // We don't want the password shown to users
-      if (res.Item.password) delete res.Item.password;
-      return res.Item;
-    }
+      console.debug ("*** Helper - User - User was found...");
 
-    throw new Error('User not found');
-  });
+      // We don't want the password shown to users
+      if (res.Item.password) 
+        delete res.Item.password;
+
+      return res.Item;
+    } else {
+      console.debug ("*** Helper - User - User was not found");
+    }
+    // throw new Error('User not found');
+  })
+};
+
+/**
+ * Get a user by ID
+ * @param str id
+ */
+module.exports.updateUser = params => {
+  console.debug ("*** Helper - User - updateUser - started");
+  console.debug ("*** Helper - User - params: ", JSON.stringify(params));
+
+  // DB.update(params).promise()
+  // .then((user) => {
+  //   if (user && user.Item) {
+  //     console.debug ("*** Helper - User - User was found and updated...");
+  //     return user.Item;
+  //   } else {
+  //     console.debug ("*** Helper - User - User was not found and was not updated");
+  //     return null;
+  //   }
+  // })
+  try {
+    DB.update(params, function (err, user) 
+    {
+      console.debug ("*** Handler login - DB update was called");
+        if (err) {
+            console.debug ("*** Helper - User - Error updating user informnatin" + JSON.stringify(err));
+            return null;
+        } else {
+            console.debug ("*** Helper - User - Return was successful - user information was updated");
+            return user;
+        }
+    });
+  } catch (err)
+  {
+    console.debug (JSON.stringify(err));
+  }
+}

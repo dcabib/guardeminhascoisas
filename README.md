@@ -24,6 +24,17 @@ sls dynamodb install
 (optional) env.prod.yml
 ```
 
+## Required softwares:
+
+- NodeJS (version 10 or newer)
+- Java runtime (for dynamoDB local server)
+
+## Recommended software
+
+- Visual Studio Code (IDE for develpment)
+- Postman
+- Google Chrome
+
 ---
 
 # 1. Usage
@@ -106,8 +117,8 @@ Run in another terminal (or using your favorite HTTP Client - Postman for exampl
 ```bash
 Request: POST /register
 {
-  "firstname": "John",
-  "lastname": "Smith",
+  "firstName": "John",
+  "lastName": "Smith",
   "email": "john@smith.co",
   "password": "123Abc123"
 }
@@ -248,6 +259,16 @@ sls deploy
 # OR to use env.dev.yml environment variables:
 # sls deploy --STAGE dev
 ```
+
+# 5. Debugging
+
+## 5.1. DynamoDB Local Shell / Web tool
+
+You can use your browser to query dynamoDB local database. After running npm star (sls offline start --migrate), use this URL to check database information 
+
+http://localhost:8000/shell/
+
+
 
 ---
 
