@@ -144,20 +144,6 @@ const login = async (event, context, cb) => {
                     cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
                 }
               });
-
-            // DB.update(params, function (err, updatedUser) 
-            // {
-            //   console.debug ("*** Handler login - DB update was called");
-    
-            //     if (err) {
-            //         console.debug ("*** Handler login - Error updating user informnatin" + JSON.stringify(err));
-            //         cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
-            //     } else {
-            //         console.debug ("*** Handler login - Return was successful - user information was updated");
-            //     }
-            // });
-
-            // cb(null, {statusCode: 200, message: 'Success - you are now logged in', data: { token: genToken, ...user }})
         })
     }
     catch (err) {
