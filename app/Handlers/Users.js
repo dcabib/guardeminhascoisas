@@ -31,7 +31,7 @@ const register = async (event, context, cb) => {
     const params = {
       TableName,
       Item: {
-        id: await uuid.v1(),
+        id: await uuid.v4(),
         firstName: sanitizer.trim(firstName),
         lastName: sanitizer.trim(lastName),
         email: sanitizer.normalizeEmail(sanitizer.trim(email)),
@@ -50,7 +50,7 @@ const register = async (event, context, cb) => {
         console.debug ("*** Handler register - Check if there is another user with provided email: " + params.Item.email);
         if (user) { 
           console.debug ("*** Handler register - Valid user was founded with provided email");
-          cb(null, {statusCode: 409, message: `User with provided email ${params.Item.email} already exists. Please use a different email....`});
+          cb(null, {statusCode: 409, message: `User with provided email ${params.Item.email} already exists. Please use a different email...`});
         }
       })
       .then(() => {
@@ -98,7 +98,7 @@ const login = async (event, context, cb) => {
             console.debug ("*** Handler login - User was returned");
             if (!user) { 
                 console.debug ("*** Handler login - User is not valid");
-                cb(null, {statusCode: 404, message: 'Username/Password provided is not correct'}); 
+                cb(null, {statusCode: 404, message: 'Invalid Username or Password...'}); 
             } 
             return user; 
         })
@@ -107,7 +107,7 @@ const login = async (event, context, cb) => {
             const passwordIsValid = await bcrypt.compare(password, user.password);
             if (!passwordIsValid) {
                 console.debug ("*** Handler login - Password does not match");
-                cb(null, {statusCode: 404, message: 'Username/Password is not correct: '});
+                cb(null, {statusCode: 404, message: 'Invalid Username or Password...'});
             }
             return user;
         })
@@ -235,7 +235,7 @@ const update = async (event, context, cb) =>
           if (foundUser.email === email && foundUser.id !== id) 
           {
               console.debug ("*** Handler update - WARNING: That email belongs to another user");
-              return cb(null, {statusCode: 409, message: 'Error: The provided email belongs to another user'});
+              return cb(null, {statusCode: 409, message: 'The provided email belongs to another user. Please use a different email...'});
           }
         }
         // Update user information

@@ -1,13 +1,14 @@
 const jwt = require('jsonwebtoken');
 const DB = require('../../db');
 
+
 /**
  * Middleware for authorizing requests
  * @param event 
  * @param context 
  * @param callback 
  */
-module.exports.auth = (event, context, callback) => {
+module.exports.auth = (event, context, cb) => {
   console.info("Handler auth - starting");
 
   try {
@@ -15,23 +16,23 @@ module.exports.auth = (event, context, callback) => {
     let token;
 
     if (!event.authorizationToken)
-      return callback(null, 'Unauthorized');
+      return cb(null, 'Unauthorized');
 
     // Check header or url parameters or post parameters for token
     token = event.authorizationToken.split(' ')[1];
     // console.log (token);
 
-    if (!token)
-      // console.info("JWT Token not present in the request");
-      return callback(null, 'Unauthorized');
+    if (!token) {
+      console.debug("JWT Token not present in the request");
+      return cb(null, 'Unauthorized');
+    }
 
-    // Verifies secret and checks exp
+    console.debug("Verifies secret and checks expiration");
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => 
     {
       if (err) {
-        // console.info("Invalid Token in the request:" + err);
-
-        return callback(null, 'Unauthorized');
+        console.debug("Invalid Token in the request");
+        return cb(null, {statusCode: 403, message: 'Invalid token...'}); 
       }
       // Check whether user ID is legit in the DB
       return DB.get({
@@ -39,10 +40,13 @@ module.exports.auth = (event, context, callback) => {
         Key: { id: decoded.id }
       }).promise().then((res) => {
         // If the user id exists in the db, save to request for use in other routes
-        if (res && res.Item) return callback(null, generatePolicy(res.Item, 'Allow', event.methodArn))
+        if (res && res.Item) 
+        {
+          return cb(null, generatePolicy(res.Item, 'Allow', event.methodArn))
+        }
         
         // Otherwise return an error
-        return callback(null, 'Unauthorized');
+        return cb(null, 'Unauthorized');
       });
     });
   }
