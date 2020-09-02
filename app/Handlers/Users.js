@@ -129,8 +129,6 @@ const login = async (event, context, cb) => {
               ReturnValues: 'ALL_NEW',
             };
             
-            console.debug ("*** Handler login - params to update user: " + JSON.stringify(params));
-
             console.debug ("*** Handler login - updating user information to add token ");
 
             return updateUser(params) // Check if the new email already exists
@@ -138,7 +136,7 @@ const login = async (event, context, cb) => {
               {
                 if (user) {
                   console.debug ("*** Handler login - Return was successful - user information was updated");
-                  cb(null, {statusCode: 200, message: 'Success - you are now logged in', data: { token: genToken, ...user }})
+                  cb(null, {statusCode: 200, message: 'Success - you are now logged in', data: { token: user.Attributes.lastToken }})
                 } else {
                     console.debug ("*** Handler login - Error updating user informnatin" + JSON.stringify(err));
                     cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
@@ -183,7 +181,7 @@ module.exports.user = middy(user)
 const update = async (event, context, cb) => 
 {
   console.debug ("*** Handler update - started.");
-  console.debug ("*** event: ." + JSON.stringify(event));
+  // console.debug ("*** event: ." + JSON.stringify(event));
 
   try 
   {
@@ -237,26 +235,21 @@ const update = async (event, context, cb) =>
           if (foundUser.email === email && foundUser.id !== id) 
           {
               console.debug ("*** Handler update - WARNING: That email belongs to another user");
-              return cb(null, {statusCode: 409, message: 'Error: That email belongs to another user'});
+              return cb(null, {statusCode: 409, message: 'Error: The provided email belongs to another user'});
           }
         }
         // Update user information
         console.debug ("*** Handler update - Update user information");
-        console.debug (params);
-
-        DB.updateItem(params, function (err, updatedUser) 
+        return updateUser(params) // Check if the new email already exists
+        .then((user) => 
         {
-          console.debug ("*** Handler update - DB update was called");
-
-            if (err) {
-                console.debug ("*** Handler update - Error updating user informnatin");
-                cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
-            } else {
-                console.debug ("*** Handler update - Return was successful - user information was updated");
-                cb(null, {statusCode: 200, message: 'Success - you are now logged in'});
-
-                return updatedUser;
-            }
+          if (user) {
+            console.debug ("*** Handler update - Return was successful - user information was updated");
+            cb(null, {statusCode: 200, message: 'User information was updated', data: { firstName: user.Attributes.firstName, lastName: user.Attributes.lastName, email: user.Attributes.email}})
+          } else {
+              console.debug ("*** Handler login - Error updating user informnatin" + JSON.stringify(err));
+              cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
+          }
         });
       });
     } 

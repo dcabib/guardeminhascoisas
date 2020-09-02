@@ -7,7 +7,8 @@
     "password": "$2a$08$cL0mUj5pDcZ5T5lkkzFFn.joE.ai7Z5KSXBvc5O2OjzNkAKUs5rim",
     "level": "standard",
     "createdAt": 1536134110955,
-    "updatedAt": 1536134110955
+    "updatedAt": 1536134110955,
+    "lastToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAzOTY5MzEwLWIwZTEtMTFlOC1hNDhiLWVmYTMxMTI0ZDQ2YyIsImVtYWlsIjoiam9obkBkb2UuY29tIiwiaWF0IjoxNTk5MDA5MTQ0LCJleHAiOjE1OTkwOTU1NDR9.UYohknoZpsUnJDUA9WBbqz6oqLXxKp99rqQmfNXOnsE"
   },
   {
     "id": "09dcd730-e7bb-11ea-b011-676d7a064ce2",
