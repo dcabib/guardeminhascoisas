@@ -83,3 +83,29 @@ module.exports.updateUser = (params) => {
     return null;
   }
 };
+
+/**
+ * Delete a user by ID
+ * @param str id
+ */
+module.exports.deleteUsers = (params) => {
+  console.debug("*** Helper - User - deleteUsers - started");
+  console.debug("*** Helper - User - deleteUsers - params: ", JSON.stringify(params));
+
+  try {
+    
+    return DB.delete(params).promise()
+    .then((user) => {
+      if (!user) {
+        console.debug("*** Helper - User - deleteUsers - User was not found and was not updated");
+        return null;
+      } else {
+        console.debug("*** Helper - User - deleteUsers - User was found and updated...");
+        return user;
+      }
+    });
+  } catch (err) {
+    console.debug("*** Helper - User - Error calling DB.update: " + JSON.stringify(err));
+    return null;
+  }
+};

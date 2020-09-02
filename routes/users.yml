@@ -1,5 +1,6 @@
 verify-token:
   handler: app/Middleware/VerifyToken.auth
+
 login:
   handler: app/Handlers/Users.login
   events:
@@ -25,11 +26,20 @@ user:
         cors: true
         authorizer: verify-token
         
-userUpdate:
+update:
   handler: app/Handlers/Users.update
   events:
     - http:
         path: user
         method: put
+        cors: true
+        authorizer: verify-token
+
+detele:
+  handler: app/Handlers/Users.delete
+  events:
+    - http:
+        path: user
+        method: delete
         cors: true
         authorizer: verify-token

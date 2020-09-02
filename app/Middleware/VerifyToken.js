@@ -9,29 +9,32 @@ const DB = require('../../db');
  * @param callback 
  */
 module.exports.auth = (event, context, cb) => {
-  console.info("Handler auth - starting");
+  console.info("*** Handler auth - starting");
 
   try {
 
     let token;
 
     if (!event.authorizationToken)
+    {
+      console.debug("*** Handler auth - No authorization token was provided");
       return cb(null, 'Unauthorized');
+    }
 
     // Check header or url parameters or post parameters for token
     token = event.authorizationToken.split(' ')[1];
     // console.log (token);
 
     if (!token) {
-      console.debug("JWT Token not present in the request");
+      console.debug("*** Handler auth - JWT Token not present in the request");
       return cb(null, 'Unauthorized');
     }
 
-    console.debug("Verifies secret and checks expiration");
+    console.debug("*** Handler auth - Verifies secret and checks expiration");
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => 
     {
       if (err) {
-        console.debug("Invalid Token in the request");
+        console.debug("*** Handler auth - Invalid Token in the request");
         return cb(null, {statusCode: 403, message: 'Invalid token...'}); 
       }
       // Check whether user ID is legit in the DB
@@ -42,16 +45,18 @@ module.exports.auth = (event, context, cb) => {
         // If the user id exists in the db, save to request for use in other routes
         if (res && res.Item) 
         {
+          console.debug("*** Handler auth - Valid user token");
           return cb(null, generatePolicy(res.Item, 'Allow', event.methodArn))
         }
         
         // Otherwise return an error
+        console.debug("*** Handler auth - Invalid Token in the request");
         return cb(null, 'Unauthorized');
       });
     });
   }
   catch (err) {
-    console.log(err);
+    console.error ("*** Handler auth - Error during authorization");
   }
 };
 

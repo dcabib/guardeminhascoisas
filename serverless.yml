@@ -5,6 +5,8 @@ frameworkVersion: ">=1.1.0 <2.0.0"
 plugins:
   - serverless-dynamodb-local
   - serverless-offline
+  - serverless-plugin-offline-dynamodb-stream
+
 
 custom:
   env: ${file(env.${opt:STAGE, 'prod'}.yml), file(env.yml)}
@@ -22,6 +24,16 @@ custom:
           - table: ${self:service}-${self:provider.stage}-users
             sources: [./database/seeds/users.json]
 
+  dynamodbStream:
+    host: localhost
+    port: 8000
+    pollForever: true
+    region: ${self:custom.env.REGION}
+    streams:
+      - table: ${self:provider.environment.TABLENAME_USERS}
+        functions:
+          - user_stream_listener
+
 provider:
   name: aws
   runtime: nodejs12.x
@@ -31,7 +43,8 @@ provider:
   environment:
     JWT_SECRET: ${self:custom.env.JWT_SECRET}
     TABLENAME_USERS: ${self:service}-${self:provider.stage}-users
-    
+    TABLENAME_USERS_DELETED: ${self:service}-${self:provider.stage}-users-deleted
+
   iamRoleStatements:
   - Effect: Allow
     Action:
@@ -45,6 +58,18 @@ provider:
       # DynamoDB tables to provide access to
       - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS}"
 
+  # Role for access streaming 
+  iamStreamRoleStatements:
+  - Effect: Allow
+    Action: 
+      - dynamodb:DescribeStream
+      - dynamodb:GetRecords
+      - dynamodb:GetShardIterator
+      - dynamodb:ListStreams
+    Resource:
+      - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS}"
+
+
 functions:
 
   verify-token:
@@ -52,6 +77,7 @@ functions:
 
   login:
     handler: app/Handlers/Users.login
+    role: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: login
@@ -60,6 +86,7 @@ functions:
 
   register:
     handler: app/Handlers/Users.register
+    role: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: register
@@ -68,6 +95,7 @@ functions:
 
   user:
     handler: app/Handlers/Users.user
+    role: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
@@ -75,8 +103,9 @@ functions:
           cors: true
           authorizer: verify-token
           
-  userUpdate:
+  update:
     handler: app/Handlers/Users.update
+    role: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
@@ -84,9 +113,26 @@ functions:
           cors: true
           authorizer: verify-token
 
+  delete:
+    handler: app/Handlers/Users.deleteUser
+    role: ${self:provider.iamRoleStatements}
+    events:
+      - http:
+          path: user
+          method: delete
+          cors: true
+          authorizer: verify-token
+
+  user_stream_listener:
+      handler: app/Handlers/Users.stream_listener
+      role: ${self:provider.iamStreamRoleStatements}
+      events:
+        - stream: ${self:provider.environment.TABLENAME_USERS}-stream
 
 resources:
+
   Resources:
+
     UsersDynamoDbTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
@@ -111,3 +157,21 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+
+    DeletedUsersDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.TABLENAME_USERS_DELETED}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+

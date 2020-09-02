@@ -9,9 +9,10 @@ const DB = require('../../db');
 const requestSchema = require('../Requests/Users');
 const validatorMiddleware = require('../Middleware/Validator');
 const apiResponseMiddleware = require('../Middleware/ApiResponse');
-const { signToken, userByEmail, userById, updateUser } = require('../Helpers/Users');
+const { signToken, userByEmail, userById, updateUser, deleteUsers } = require('../Helpers/Users');
 
 const TableName = process.env.TABLENAME_USERS;
+const TableNameDeleted = process.env.TABLENAME_USERS_DELETED;
 
 
 /**
@@ -118,8 +119,8 @@ const login = async (event, context, cb) => {
             const genToken = signToken(user.id, user.email);
             console.debug ("*** Handler login - Token was generated: " + genToken);
 
-            // Updating user informatio on DB
-            console.log ("*** Handler login - User: " + JSON.stringify(user.id)); 
+            // Updating user / token informatio on DB 
+            console.debug ("*** Handler login - User: " + JSON.stringify(user.id)); 
 
             const params = {
               TableName,
@@ -178,10 +179,8 @@ module.exports.user = middy(user)
  * @param cb
  */
 
-const update = async (event, context, cb) => 
-{
+const update = async (event, context, cb) => {
   console.debug ("*** Handler update - started.");
-  // console.debug ("*** event: ." + JSON.stringify(event));
 
   try 
   {
@@ -247,7 +246,7 @@ const update = async (event, context, cb) =>
             console.debug ("*** Handler update - Return was successful - user information was updated");
             cb(null, {statusCode: 200, message: 'User information was updated', data: { firstName: user.Attributes.firstName, lastName: user.Attributes.lastName, email: user.Attributes.email}})
           } else {
-              console.debug ("*** Handler login - Error updating user informnatin" + JSON.stringify(err));
+              console.error ("*** Handler update - Error updating user informnatin" + JSON.stringify(err));
               cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
           }
         });
@@ -255,7 +254,7 @@ const update = async (event, context, cb) =>
     } 
     catch (err) 
     {
-      console.err ("Handler update - Internal server error while login user..." + JSON.stringify(err));
+      console.error ("Handler update - Internal server error while updating user..." + JSON.stringify(err));
       cb(null, { statusCode: err.statusCode, message: 'Handler update - Internal Server error: ' + JSON.stringify(err)});
     }
   }
@@ -266,3 +265,118 @@ module.exports.update = middy(update)
   .use(validatorMiddleware({ inputSchema: requestSchema.update }))
   .use(apiResponseMiddleware());
   
+
+/**
+ * DELETE /user ----------------------------------------------------
+ * Delete my User account
+ * @param event
+ * @param context
+ * @param cb
+ */
+
+const deleteUser = async (event, context, cb) => {
+  console.debug ("*** Handler delete - started.");
+
+  const userId = event.requestContext.authorizer.user.id;
+  console.debug ("*** Handler delete - User to be deleted: " + userId);
+
+  try
+  {
+    return userById(userId) // Check if the user exists (of course exists)
+    .then((foundUser) => 
+    {
+      if (!foundUser) {
+        console.debug ("*** Handler delete - user was not found");
+        return cb(null, {statusCode: 404, message: 'User was not found'});
+      }
+
+      console.log ("######## user: " + JSON.stringify(foundUser));
+
+      return deleteUsers({TableName, Key: { id: userId }}) 
+      .then((user) => 
+      {
+        if (!user) {
+          console.error ("*** Handler delete - Error deleting" + JSON.stringify(user));
+          cb(null, {statusCode: err.statusCode, message: 'Internal Server error while deleting user:' + JSON.stringify(user)});
+        } else {
+          console.debug ("*** Handler delete - Return was successful deleted");
+          cb(null, {statusCode: 200, message: 'User was successfully deleted'})
+        }
+      });
+    });
+  } 
+  catch (err) 
+  {
+    console.error ("Handler delete - Internal server error while deleting (updating) user info..." + JSON.stringify(err));
+    cb(null, { statusCode: err.statusCode, message: 'Handler delete - Internal Server error: ' + JSON.stringify(err)});
+  }
+
+  }
+  
+  
+module.exports.deleteUser = middy(deleteUser)
+  .use(jsonBodyParser())
+  .use(apiResponseMiddleware());
+
+/**
+ *  /stream_listener ----------------------------------------------------
+ * Listener DynamoDB streams 
+ * @param event
+ * @param context
+ * @param cb
+ */
+
+const stream_listener = async (event, context, cb) => {
+  console.debug ("*** Handler stream_listener - started.");
+
+  try {
+    for (const record of event.Records) {
+      if (record.eventName === "REMOVE")
+      {
+        // console.debug ("*** Handler stream_listener -  Record: " + JSON.stringify (record));
+        console.debug ("id:        " + JSON.stringify(record.dynamodb.OldImage.id.S));
+        console.debug ("firstName: " + JSON.stringify(record.dynamodb.OldImage.firstName.S));
+        console.debug ("lastName:  " + JSON.stringify(record.dynamodb.OldImage.lastName.S));
+        console.debug ("createdAt: " + JSON.stringify(record.dynamodb.OldImage.createdAt.N));
+        console.debug ("password:  " + JSON.stringify(record.dynamodb.OldImage.password.S));
+        console.debug ("level:     " + JSON.stringify(record.dynamodb.OldImage.level.S));
+        console.debug ("email:     " + JSON.stringify(record.dynamodb.OldImage.email.S));
+        console.debug ("updatedAt: " + JSON.stringify(record.dynamodb.OldImage.updatedAt.N));
+
+        const params = {
+          TableName: TableNameDeleted,
+          Item: {
+            id:        record.dynamodb.OldImage.id.S,
+            firstName: record.dynamodb.OldImage.firstName.S,
+            lastName:  record.dynamodb.OldImage.lastName.S,
+            email:     record.dynamodb.OldImage.email.S,
+            password:  record.dynamodb.OldImage.password.S,
+            level:     record.dynamodb.OldImage.level.S,
+            createdAt: record.dynamodb.OldImage.createdAt.N,
+            updatedAt: record.dynamodb.OldImage.updatedAt.N,
+          },
+        };
+
+        DB.put(params, function (err, data) {
+          if (err) {
+            console.error ("Error trying insert deleted user into user-deleted database:" + JSON.stringify(err));
+            return;
+          } else
+          console.log ("User information was updated into user-deleted database");
+
+        });
+      } else {
+        console.debug ("*** Handler stream_listener - stream event ignored: " + record.eventName);
+      }
+    }
+  } 
+  catch (err) 
+  {
+    console.error ("Handler stream_listener - Internal server error ..." + JSON.stringify(err));
+    cb(null, { statusCode: err.statusCode, message: 'Handler stream_listener - Internal Server error: ' + JSON.stringify(err)});
+  }
+
+}
+  
+module.exports.stream_listener = middy(stream_listener)
+  .use(jsonBodyParser());
