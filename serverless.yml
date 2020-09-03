@@ -1,4 +1,4 @@
-service: serverless-jwt-auth
+service: user-auth
 
 frameworkVersion: ">=1.1.0 <2.0.0"
 
@@ -7,9 +7,10 @@ plugins:
   - serverless-offline
   - serverless-plugin-offline-dynamodb-stream
 
-
 custom:
   env: ${file(env.${opt:STAGE, 'prod'}.yml), file(env.yml)}
+
+  #DynamoDB Local Configuration
   dynamodb:
     start:
       port: 8000
@@ -24,6 +25,7 @@ custom:
           - table: ${self:service}-${self:provider.stage}-users
             sources: [./database/seeds/users.json]
 
+  #DynamoDB STREAMS Local Configuration
   dynamodbStream:
     host: localhost
     port: 8000
@@ -45,30 +47,32 @@ provider:
     TABLENAME_USERS: ${self:service}-${self:provider.stage}-users
     TABLENAME_USERS_DELETED: ${self:service}-${self:provider.stage}-users-deleted
 
+  iamRoleStatementsStream:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${self:custom.env.REGION}:#{AWS::AccountId}:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
+
   iamRoleStatements:
-  - Effect: Allow
-    Action:
-      - dynamodb:Query
-      - dynamodb:Scan
-      - dynamodb:GetItem
-      - dynamodb:PutItem
-      - dynamodb:UpdateItem
-      - dynamodb:DeleteItem
-    Resource:
-      # DynamoDB tables to provide access to
-      - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS}"
-
-  # Role for access streaming 
-  iamStreamRoleStatements:
-  - Effect: Allow
-    Action: 
-      - dynamodb:DescribeStream
-      - dynamodb:GetRecords
-      - dynamodb:GetShardIterator
-      - dynamodb:ListStreams
-    Resource:
-      - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS}"
-
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:#{AWS::AccountId}:table/${self:provider.environment.TABLENAME_USERS},
+                arn:aws:dynamodb:${opt:region, self:provider.region}:#{AWS::AccountId}:table/${self:provider.environment.TABLENAME_USERS_DELETED}"
 
 functions:
 
@@ -77,7 +81,7 @@ functions:
 
   login:
     handler: app/Handlers/Users.login
-    role: ${self:provider.iamRoleStatements}
+    iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: login
@@ -86,7 +90,7 @@ functions:
 
   register:
     handler: app/Handlers/Users.register
-    role: ${self:provider.iamRoleStatements}
+    iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: register
@@ -95,7 +99,7 @@ functions:
 
   user:
     handler: app/Handlers/Users.user
-    role: ${self:provider.iamRoleStatements}
+    iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
@@ -103,9 +107,9 @@ functions:
           cors: true
           authorizer: verify-token
           
-  update:
+  userUpdate:
     handler: app/Handlers/Users.update
-    role: ${self:provider.iamRoleStatements}
+    iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
@@ -115,7 +119,7 @@ functions:
 
   delete:
     handler: app/Handlers/Users.deleteUser
-    role: ${self:provider.iamRoleStatements}
+    iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
@@ -125,17 +129,17 @@ functions:
 
   user_stream_listener:
       handler: app/Handlers/Users.stream_listener
-      role: ${self:provider.iamStreamRoleStatements}
+      iamRoleConfig: ${self:provider.iamRoleStatementsStream}
       events:
-        - stream: ${self:provider.environment.TABLENAME_USERS}-stream
+        - stream:
+            type: dynamodb
+            arn: !GetAtt UsersDynamoDbTable.StreamArn
 
 resources:
-
   Resources:
-
     UsersDynamoDbTable:
       Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
+      DeletionPolicy: Delete
       Properties:
         TableName: ${self:provider.environment.TABLENAME_USERS}
         AttributeDefinitions:
@@ -144,16 +148,6 @@ resources:
         KeySchema:
           - AttributeName: id
             KeyType: HASH
-        # GlobalSecondaryIndexes:
-        # - IndexName: myGSIbyEmail
-        #   KeySchema:
-        #   - AttributeName: email
-        #     KeyType: HASH
-        #   Projection:
-        #     ProjectionType: 'ALL'
-        #   ProvisionedThroughput:
-        #     ReadCapacityUnits: 1
-        #     WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -162,7 +156,7 @@ resources:
 
     DeletedUsersDynamoDbTable:
       Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain
+      DeletionPolicy: Delete
       Properties:
         TableName: ${self:provider.environment.TABLENAME_USERS_DELETED}
         AttributeDefinitions:
@@ -174,4 +168,3 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-

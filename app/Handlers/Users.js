@@ -87,6 +87,22 @@ module.exports.register = middy(register)
  */
 const login = async (event, context, cb) => {
   console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+  console.debug ("*** Handler login - started");
+
 
   const { email, password } = event.body;
 

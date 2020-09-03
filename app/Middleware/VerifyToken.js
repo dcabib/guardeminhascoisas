@@ -9,7 +9,7 @@ const DB = require('../../db');
  * @param callback 
  */
 module.exports.auth = (event, context, cb) => {
-  console.info("*** Handler auth - starting");
+  console.debug("*** Handler auth - starting");
 
   try {
 
@@ -23,7 +23,7 @@ module.exports.auth = (event, context, cb) => {
 
     // Check header or url parameters or post parameters for token
     token = event.authorizationToken.split(' ')[1];
-    // console.log (token);
+    console.log ("*** Handler auth - " + token);
 
     if (!token) {
       console.debug("*** Handler auth - JWT Token not present in the request");
@@ -45,7 +45,7 @@ module.exports.auth = (event, context, cb) => {
         // If the user id exists in the db, save to request for use in other routes
         if (res && res.Item) 
         {
-          console.debug("*** Handler auth - Valid user token");
+          console.debug("*** Handler auth - SUCCESS: Valid user token");
           return cb(null, generatePolicy(res.Item, 'Allow', event.methodArn))
         }
         
