@@ -23,6 +23,11 @@ module.exports.userByEmail = (email) => {
   console.debug("###### Helper - User - userByEmail - started");
   console.debug("###### Helper - User - userByEmail - email: " + email);
 
+  if (!email) {
+    console.debug("###### Helper - User - userByEmail - missing required parameters: email");
+    return null;
+  }
+
   const params = {
     TableName,
     FilterExpression: "email = :email",
@@ -57,6 +62,11 @@ module.exports.userByEmail = (email) => {
 module.exports.userById = async (id) => {
   console.debug("###### Helper - User - userById - started");
   console.debug("###### Helper - User - id: ", id);
+
+  if (!id) {
+    console.debug("###### Helper - User - userById - missing required parameters: id");
+    return null;
+  }
 
   return DB.get({ TableName, Key: { id } })
     .promise()
@@ -149,11 +159,17 @@ module.exports.updateUser = (data) => {
   console.debug("###### Helper - User - updateUser - started");
   console.debug("###### Helper - User - updateUser - data received: ", JSON.stringify(data));
 
+  if (!data || !data.id || !data.UpdateExpression || !data.ExpressionAttributeValues) {
+    console.debug("###### Helper - User - updateUser - Error: missing mandatory parameters");
+    return null;
+  }
+
   const params = {
     TableName,
     Key: {"id": data.id},
     UpdateExpression: data.UpdateExpression,
     ExpressionAttributeValues: data.ExpressionAttributeValues,
+    ReturnValues: 'ALL_NEW',
   };
 
   console.debug("###### Helper - User - updateUser - params to update: ", JSON.stringify(params));
@@ -166,7 +182,7 @@ module.exports.updateUser = (data) => {
         return null;
       } else {
         console.debug("###### Helper - User - updateUser - User was found and updated...");
-        return user;
+        return user.Items[0];
       }
     });
   } catch (err) {
@@ -175,15 +191,80 @@ module.exports.updateUser = (data) => {
   }
 };
 
+module.exports.createParamsforUpdate = async(id, firstName, lastName, email, password) => {
+  console.debug ("*** Handler update - createParams - stating");
+
+  let query = '';
+  let queryValues = {};
+
+  // Create update query based on user input
+  // Check whitch values to change in used database
+  if (firstName) {
+    console.debug ("*** Handler update - createParams - updating firstName");
+    query += 'set firstName=:fn, '; queryValues[':fn'] = sanitizer.trim(firstName) 
+  }
+
+  if (lastName) {
+    console.debug ("*** Handler update - createParams - updating lastName");
+    if (query === '') 
+        query+= 'set ';
+    query+= 'lastName=:ln, ';
+    queryValues[':ln'] = sanitizer.trim(lastName);
+  }
+  
+  if (email) {
+    console.debug ("*** Handler update - createParams - updating email");
+
+    if (query === '') 
+      query+= 'set ';
+    query+= 'email=:em, ';
+    queryValues[':em'] = sanitizer.normalizeEmail(sanitizer.trim(email))
+  }
+  
+  console.debug ("*** Handler update - createParams - updating updatedAt");
+  // Mandatory update
+  if (query === '') 
+    query+= 'set ';
+  query += 'updatedAt=:ud';
+  queryValues[':ud'] = new Date().getTime();
+
+  // Password is optional, if provided, pass to query
+  if (password) 
+  {
+    console.debug ("*** Handler update - User has choosen to update password");
+    query += ', password=:pw';
+    queryValues[':pw'] = await bcrypt.hash(password, 8);
+  }
+  const retParams = {
+    id : id,
+    UpdateExpression: query,
+    ExpressionAttributeValues: queryValues,
+  };
+
+  console.debug ("*** Handler update - Returning params to update user: " + JSON.stringify(retParams));
+
+ return retParams;
+}
+
 /**
  * Delete a user by ID
  * @param str id
  */
-module.exports.deleteUsers = (params) => {
+module.exports.deleteUsers = (userId) => {
   console.debug("###### Helper - User - deleteUsers - started");
-  console.debug("###### Helper - User - deleteUsers - params: ", JSON.stringify(params));
+  console.debug("###### Helper - User - deleteUsers - Deleting user with id: " + userId);
+
+  if (!userId) {
+    console.debug("###### Helper - User - deleteUsers - Error: missing mandatory parameters: userId");
+    return null;
+  }
 
   try {
+    const params = {
+        TableName, 
+        Key: { id: userId },
+        ReturnValues: 'ALL_OLD'
+    };
     
     return DB.delete(params).promise()
     .then((user) => {
@@ -191,8 +272,8 @@ module.exports.deleteUsers = (params) => {
         console.debug("###### Helper - User - deleteUsers - User was not found and was not updated");
         return null;
       } else {
-        console.debug("###### Helper - User - deleteUsers - User was found and updated...");
-        return user;
+        console.debug("###### Helper - User - deleteUsers - User was found deleted ...");
+        return user.Items[0];
       }
     });
   } catch (err) {

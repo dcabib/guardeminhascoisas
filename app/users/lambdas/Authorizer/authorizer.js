@@ -1,4 +1,5 @@
 const jsonwebtoken = require('jsonwebtoken');
+const { userById } = require ("../Helpers/UsersModel")
 
 const parseArn = arn => {
   const [left, right] = arn.split('/', 2);
@@ -28,7 +29,7 @@ module.exports.auth = async event => {
     }
   };
 
-  let decodedToken;
+  let decodedToken; // Store decodeed token
 
   try {
 
@@ -46,6 +47,22 @@ module.exports.auth = async event => {
       const { service, region, accountId, apiId, stage } = parseArn(event.methodArn);
       const userId = decodedToken.id;
       const userEmail = decodedToken.email;
+
+      // Check if the token is the same stored in LastToken 
+      console.debug (`*** Handler update - Getting lastToken from user: ${userId}.`);
+      const findRealUser = await userById(userId); 
+
+      if (!findRealUser || (findRealUser.lastToken != token)) {
+        if (!findRealUser) { 
+          console.debug ("*** Handler update - No previous token was found");
+        } else {
+          console.debug ("*** Handler update - lastToken: " + findRealUser.lastToken);
+        }
+        console.debug ("*** Handler update - token from header: " + token);
+
+        console.debug ("*** Handler update - WARNING: Valid token but does not belongs to this user or expired");
+        return authResponse;
+      }
 
       console.debug ("*** Authentication - auth - userId: " + userId + " userEmail: " + userEmail);
       console.debug ("*** Authentication - auth - token: " + JSON.stringify(decodedToken));
@@ -85,62 +102,3 @@ module.exports.auth = async event => {
     };
   }
 };
-// const jwt = require('jsonwebtoken');
-
-// exports.auth =  function(event, context, callback) {
-//   const token = event.authorizationToken;
-//   try {
-//     console.log ("***** INICIO");
-//     console.log(token);
-//     console.log(process.env.JWT_SECRET);
-//     const user = jwt.verify(token, process.env.JWT_SECRET);
-    
-//     console.log ("***** ALLOW");
-
-//     //if(!hasRequiredRole(user.roles)) throw "User does not have the required role to perform this action - " + user.id + " " + user.email;
-//     callback(null, generatePolicy(user.id, 'Allow', event.methodArn, user));
-//   } catch (er) {
-//     console.error(er);
-//     callback(null, generatePolicy(user.id, 'Deny', event.methodArn));
-//   }
-  
-// };
-
-// const generatePolicy = function(principalId, effect, resource, user) {
-//   var authResponse = {};
-  
-//   authResponse.principalId = principalId;
-//   if (effect && resource) {
-//       var policyDocument = {};
-//       policyDocument.Version = '2012-10-17'; 
-//       policyDocument.Statement = [];
-//       var statementOne = {};
-//       statementOne.Action = 'execute-api:Invoke'; 
-//       statementOne.Effect = effect;
-//       statementOne.Resource = resource;
-//       policyDocument.Statement[0] = statementOne;
-//       authResponse.policyDocument = policyDocument;
-
-//       console.log ("***** Policy:" + JSON.stringify(authResponse));
-
-//   }
-  
-//   // Optional output with custom properties of the String, Number or Boolean type.
-//   if(user) { 
-//     authResponse.context = { user };
-//     authResponse.principalId = user.id;
-//   }
-
-//   console.log ("***** user:" + JSON.stringify(user));
-
-//   return authResponse;
-// }
-
-// const hasRequiredRole = function(userRoles) {
-//   if(!process.env.ROLES) return true;
-//   const roles = JSON.parse(process.env.ROLES);
-//   for(var i in roles) {
-//     if(userRoles.includes(roles[i].trim())) return true;
-//   }
-//   return false;
-// }

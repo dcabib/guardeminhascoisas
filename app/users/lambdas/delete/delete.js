@@ -21,9 +21,9 @@ const handler = async (event, context, cb) => {
 
   try
   {
-    return userById(userId) // Check if the user exists (of course exists)
-    .then((foundUser) => 
-    {
+    // Check if the user exists (of course exists)
+    return userById(userId) 
+    .then((foundUser) => {
       if (!foundUser) {
         console.debug ("*** Handler delete - user was not found");
         return cb(null, {statusCode: 404, message: 'User was not found'});
@@ -31,7 +31,7 @@ const handler = async (event, context, cb) => {
 
       console.log ("######## user: " + JSON.stringify(foundUser));
 
-      return deleteUsers({TableName, Key: { id: userId }}) 
+      return deleteUsers(userId) 
       .then((user) => 
       {
         if (!user) {

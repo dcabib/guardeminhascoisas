@@ -2,9 +2,7 @@ const jwt = require('jsonwebtoken');
 const DB = require('../../../database/db');
 
 // Unit Tests
-const { signToken, userByEmail, userById, addUser } = require('../../../app/users/lambdas/Helpers/UsersModel');
-// const login  = require('../../../app/users/lambdas/login/login');
-// const register  = require('../../../app/users/lambdas/register/register');
+const { signToken, userByEmail, userById, addUser, updateUser, createParamsforUpdate, deleteUsers } = require('../../../app/users/lambdas/Helpers/UsersModel');
 
 const mockExitingUserData = {
   id: '03969310-b0e1-11e8-a48b-efa31124d46c',
@@ -59,7 +57,15 @@ describe('User lookup by email', () => {
     expect(res.email).toEqual(mockExitingUserData.email);
   });
 
-  it('should return null when not found in DB', async () => {
+  it('should return null when email was not provided', async () => {
+    // Mock an empty DB response
+    DB.scan = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
+
+    const res = await userByEmail();
+    expect(res).toBeNull();
+  });
+
+  it('should return null when user not found in DB', async () => {
     // Mock an empty DB response
     DB.scan = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
@@ -88,20 +94,30 @@ describe('User lookup by ID', () => {
     expect(res.password).toBeUndefined();
   });
 
-  it('should throw an error when not found in DB', async () => {
+  it('should return null when user was not found in DB', async () => {
+    // Mock an empty DB response
+    DB.get = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
+
+    const res = await userById();
+    // Should not have data
+    expect(res).toBeNull();
+  });
+
+  it('should return null when user was not found in DB', async () => {
     // Mock an empty DB response
     DB.get = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
     const res = await userById(11111111111111);
 
-    // Should have data
+    // Should not have data
     expect(res).toBeNull();
   });
+
 });
 
-// /**
-//  * Tests for addUser()
-//  */
+/**
+ * Tests for addUser()
+ */
 describe('Adding User', () => {
   beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123' }; });
   
@@ -129,19 +145,19 @@ describe('Adding User', () => {
   });
 
  it('should should not add user - missing email', async () => {
-  // Mock a single user DB response
-  DB.put = jest.fn(() => ({
-    promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData]} )),
-  }));
+    // Mock a single user DB response
+    DB.put = jest.fn(() => ({
+      promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData]} )),
+    }));
 
-  DB.get = jest.fn(() => ({
-    promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
-  }));
+    DB.get = jest.fn(() => ({
+      promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
+    }));
 
-  const res = await addUser(mockExitingUserData.firstName, mockExitingUserData.lastName, null, mockExitingUserData.password);
+    const res = await addUser(mockExitingUserData.firstName, mockExitingUserData.lastName, null, mockExitingUserData.password);
 
-  // Shouldn't have data
-  expect(res).toBeNull();
+    // Shouldn't have data
+    expect(res).toBeNull();
   });
 
   it('should should not add user - missing password', async () => {
@@ -155,6 +171,181 @@ describe('Adding User', () => {
     // Shouldn't have data
     expect(res).toBeNull();
   });
-
 });
 
+/**
+ * Tests for update()
+ */
+describe('Update User and support methods', () => {
+  beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123' }; });
+  
+  it('should get all update parameters to update user', async () => {
+    const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password)
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.UpdateExpression).toEqual('set firstName=:fn, lastName=:ln, email=:em, updatedAt=:ud, password=:pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':fn');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ln');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':em');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
+  });
+
+  it('should get all update parameters apart of fistName to update user', async () => {
+    const res = await createParamsforUpdate (mockNewUserData.id, null, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password)
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.UpdateExpression).toEqual('set lastName=:ln, email=:em, updatedAt=:ud, password=:pw');
+    expect(res.ExpressionAttributeValues).not.toHaveProperty(':fn');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ln');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':em');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
+  });
+
+  it('should get all update parameters apart of lastName to update user', async () => {
+    const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, null, mockNewUserData.email, mockNewUserData.password)
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.UpdateExpression).toEqual('set firstName=:fn, email=:em, updatedAt=:ud, password=:pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':fn');
+    expect(res.ExpressionAttributeValues).not.toHaveProperty(':ln');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':em');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
+  });
+
+  it('should get all update parameters apart of email to update user', async () => {
+    const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, null, mockNewUserData.password)
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.UpdateExpression).toEqual('set firstName=:fn, lastName=:ln, updatedAt=:ud, password=:pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':fn');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ln');
+    expect(res.ExpressionAttributeValues).not.toHaveProperty(':em');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
+  });
+
+  it('should get all update parameters apart of password to update user', async () => {
+    const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email)
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.UpdateExpression).toEqual('set firstName=:fn, lastName=:ln, email=:em, updatedAt=:ud');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':fn');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ln');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':em');
+    expect(res.ExpressionAttributeValues).not.toHaveProperty(':pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
+  });
+
+  it('should get all update parameters apart of email password to update user', async () => {
+    const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName)
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.UpdateExpression).toEqual('set firstName=:fn, lastName=:ln, updatedAt=:ud');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':fn');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ln');
+    expect(res.ExpressionAttributeValues).not.toHaveProperty(':em');
+    expect(res.ExpressionAttributeValues).not.toHaveProperty(':pw');
+    expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
+  });
+
+  it('should update user', async () => {
+    // Mock a single user DB response
+    DB.update = jest.fn(() => ({
+        promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
+    }));
+
+    const params = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password)
+    const res = await updateUser(params);
+
+    // Should have data
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.firstName).toEqual(mockNewUserData.firstName);
+    expect(res.lastName).toEqual(mockNewUserData.lastName);
+    expect(res.email).toEqual(mockNewUserData.email);
+    expect(res.password).toEqual(mockNewUserData.password);
+    expect(res.createdAt).toBeDefined();
+    expect(res.updatedAt).toBeDefined();
+  });
+
+  it('should not update user - missing mandatory parameters - id', async () => {
+    // Mock a single user DB response
+    DB.update = jest.fn(() => ({
+        promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
+    }));
+
+    const params = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password);
+    delete params['id'];
+    const res = await updateUser(params);
+
+    // Should have data
+    expect(res).toBeNull();
+  });
+
+  it('should not update user - missing mandatory parameters - UpdateExpression', async () => {
+    // Mock a single user DB response
+    DB.update = jest.fn(() => ({
+        promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
+    }));
+
+    const params = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password);
+    delete params['UpdateExpression'];
+    const res = await updateUser(params);
+
+    // Should have data
+    expect(res).toBeNull();
+  });
+
+  it('should not update user - missing mandatory parameters - ExpressionAttributeValues', async () => {
+    // Mock a single user DB response
+    DB.update = jest.fn(() => ({
+        promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
+    }));
+
+    const params = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password);
+    delete params['ExpressionAttributeValues'];
+    const res = await updateUser(params);
+
+    // Should have data
+    expect(res).toBeNull();
+    });
+});
+
+/**
+ * Tests User Deletion
+ */
+describe('User for delete', () => {
+  it('should delete a user', async () => {
+    // Mock a single user DB response
+    DB.delete = jest.fn(() => ({
+      promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData] })),
+    }));
+
+    const res = await deleteUsers(mockExitingUserData.id);
+
+    expect(res).toBeDefined();
+    expect(res.id).toEqual(mockExitingUserData.id);
+    expect(res.email).toEqual(mockExitingUserData.email);
+  });
+
+  it('should return null when id was not provided', async () => {
+    // Mock an empty DB response
+    const res = await deleteUsers();
+    expect(res).toBeNull();
+  });
+
+});

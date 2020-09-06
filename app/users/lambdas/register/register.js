@@ -43,7 +43,7 @@ const handler = async (event, context, cb) => {
       );
     }
     catch (err) {
-      console.err ("Handler register - Internal server error while creating the user..." + JSON.stringify(err));
+      console.error ("Handler register - Internal server error while creating the user..." + JSON.stringify(err));
       cb(null, { statusCode: err.statusCode, message: 'Handler register - Internal Server error: ' + JSON.stringify(err)});
     }
   }

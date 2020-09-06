@@ -128,7 +128,7 @@ functions:
 
   # Delete user  - Private API
   delete:
-    handler: app/users/lambdas/delete/index.handler
+    handler: app/users/lambdas/delete/delete.handler
     iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:

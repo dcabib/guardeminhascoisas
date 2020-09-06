@@ -68,7 +68,7 @@ const handler = async (event, context, cb) => {
           })
       }
       catch (err) {
-        console.err ("Handler login - Internal server error while login user..." + JSON.stringify(err));
+        console.error ("Handler login - Internal server error while login user..." + JSON.stringify(err));
         cb(null, { statusCode: err.statusCode, message: 'Handler login - Internal Server error: ' + JSON.stringify(err)});
       }
   }
