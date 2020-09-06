@@ -1,17 +1,11 @@
 const jwt = require('jsonwebtoken');
-const DB = require('../../db');
+const bcrypt = require("bcryptjs");
+const DB = require('../../database/db');
 
 // Unit Tests
-const { signToken, userByEmail, userById } = require('../../app/Helpers/Users');
-const  { register, login }  = require('../../app/Handlers/Users');
-
-// Funcitonal / Integation Test
-// // cost { rwegister } = require ('../../app/Handlers/Users/Users')
-// const { ServerlessLocal } = require ('../eventGenator');
-// const valitors = require ('../validators');
-// // const assert = require('chai').assert;
-// const databaseManager = require('../../databasemanager');
-// var AWS = require('aws-sdk');
+const { signToken, userByEmail, userById, addUser, updateUser, deleteUsers } = require('../../app/users/lambdas/Helpers/UsersModel');
+const  register = require('../../app/users/lambdas/register/register');
+const  login  = require('../../app/users/lambdas/login/login');
 
 const mockExitingUserData = {
   id: '03969310-b0e1-11e8-a48b-efa31124d46c',
@@ -23,17 +17,6 @@ const mockExitingUserData = {
   createdAt: 1536134110955,
   updatedAt: 1536134110955
 };
-
-// const mockNewUserData = {
-//   id: '03969310-b0e1-11e8-a48b-efa31124d46c',
-//   firstName: 'John',
-//   lastName: 'Doe',
-//   email: 'john@doe.com',
-//   password: '$2a$08$cL0mUj5pDcZ5T5lkkzFFn.joE.ai7Z5KSXBvc5O2OjzNkAKUs5rim',
-//   level: 'standard',
-//   createdAt: 1536134110955,
-//   updatedAt: 1536134110955
-// };
 
 /**
  * Tests for signToken()
@@ -95,11 +78,55 @@ describe('User lookup by ID', () => {
     expect(res.password).toBeUndefined();
   });
 
-  it('should throw an error when not found in DB', async () => {
+  it('should return null when not found in DB by ID', async () => {
     // Mock an empty DB response
     DB.get = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
-    await expect(userById(123)).rejects.toThrow('User not found');
+    const res = await userById(123);
+    console.log (res);
+    expect(res).toBeNull();
   });
 });
 
+/**
+ * Tests for addUser()
+ */
+describe('Adding User to database', () => {
+  it('should add user', async () => {
+    // Mock a single user DB response
+    DB.get = jest.fn(() => ({
+      promise: () => new Promise(resolve => resolve({ Item: mockExitingUserData })),
+    }));
+
+    const res = await addUser(mockExitingUserData.firstName, mockExitingUserData.lastName, mockExitingUserData.email, mockExitingUserData.password);
+
+    // Should have data
+    expect(res).toBeDefined();
+  });
+
+ it('should should not add user - missing email', async () => {
+  // Mock a single user DB response
+  DB.get = jest.fn(() => ({
+    promise: () => new Promise(resolve => resolve({ Item: mockExitingUserData })),
+  }));
+
+  const res = await addUser(mockExitingUserData.firstName, mockExitingUserData.lastName, null, mockExitingUserData.password);
+
+  // Shouldn't have data
+  expect(res).toBeNull();
+  });
+
+  it('should should not add user - missing password', async () => {
+    // Mock a single user DB response
+    DB.get = jest.fn(() => ({
+      promise: () => new Promise(resolve => resolve({ Item: mockExitingUserData })),
+    }));
+  
+    const res = await addUser(mockExitingUserData.firstName, mockExitingUserData.lastName, mockExitingUserData.email);
+  
+    // Shouldn't have data
+    expect(res).toBeNull();
+    DB.get
+    });
+
+});

@@ -32,7 +32,7 @@ module.exports.update = {
   type: 'object',
   properties: {
     body: {
-      required: ['firstName', 'lastName', 'email'],
+      required: [],
       type: 'object',
       properties: {
         firstName: { type: 'string', minLength: 1 },

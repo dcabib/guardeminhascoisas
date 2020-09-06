@@ -1,4 +1,4 @@
-service: user-auth
+service: ${self:custom.env.NAME}
 
 frameworkVersion: ">=1.1.0 <2.0.0"
 
@@ -6,6 +6,7 @@ plugins:
   - serverless-dynamodb-local
   - serverless-offline
   - serverless-plugin-offline-dynamodb-stream
+  - serverless-pseudo-parameters
 
 custom:
   env: ${file(env.${opt:STAGE, 'prod'}.yml), file(env.yml)}
@@ -18,7 +19,7 @@ custom:
       migrate: true
       seed: true
     stages:
-      - test
+      - ${self:custom.env.STAGE}
     seed:
       domain:
         sources:
@@ -60,7 +61,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${self:custom.env.REGION}:#{AWS::AccountId}:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
+      Resource: "arn:aws:dynamodb:${self:custom.env.REGION}:496714466045:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
 
   iamRoleStatements:
     - Effect: Allow
@@ -71,25 +72,21 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:#{AWS::AccountId}:table/${self:provider.environment.TABLENAME_USERS},
-                arn:aws:dynamodb:${opt:region, self:provider.region}:#{AWS::AccountId}:table/${self:provider.environment.TABLENAME_USERS_DELETED}"
+      Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS}",
+                 "arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS_DELETED}"]
 
+#
+# Lambnda / Functions / Methods
+#
 functions:
 
-  verify-token:
-    handler: app/Middleware/VerifyToken.auth
+  # General Authorizer for all private APIs
+  GeneralAuthorizer:
+    handler: app/users/lambdas/Authorizer/authorizer.auth
 
-  login:
-    handler: app/Handlers/Users.login
-    iamRoleConfig: ${self:provider.iamRoleStatements}
-    events:
-      - http:
-          path: login
-          method: post
-          cors: true
-
+  # Regiter a user - Public API
   register:
-    handler: app/Handlers/Users.register
+    handler: app/users/lambdas/register/register.handler
     iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
@@ -97,38 +94,52 @@ functions:
           method: post
           cors: true
 
+  # Get session token / logion for a user - Public API
+  login:
+    handler: app/users/lambdas/login/login.handler
+    iamRoleConfig: ${self:provider.iamRoleStatements}
+    events:
+      - http:
+          path: user
+          method: post
+          cors: true
+
+  # Get user information - Private API
   user:
-    handler: app/Handlers/Users.user
+    handler: app/users/lambdas/get/get.handler
     iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
           method: get
           cors: true
-          authorizer: verify-token
-          
+          authorizer: GeneralAuthorizer
+
+  # Update user information - Private API
   userUpdate:
-    handler: app/Handlers/Users.update
+    handler: app/users/lambdas/update/update.handler
     iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
           method: put
           cors: true
-          authorizer: verify-token
+          authorizer: GeneralAuthorizer
 
+  # Delete user  - Private API
   delete:
-    handler: app/Handlers/Users.deleteUser
+    handler: app/users/lambdas/delete/index.handler
     iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
           path: user
           method: delete
           cors: true
-          authorizer: verify-token
+          authorizer: GeneralAuthorizer
 
+  # Stream deleted user information to backup table - AWS EVENT
   user_stream_listener:
-      handler: app/Handlers/Users.stream_listener
+      handler: app/users/lambdas/streamListener/index.handler
       iamRoleConfig: ${self:provider.iamRoleStatementsStream}
       events:
         - stream:
@@ -137,6 +148,14 @@ functions:
 
 resources:
   Resources:
+
+    # Rest API
+    ApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:service}-${self:custom.env.STAGE}
+        Description: Main API Gateway for the ${self:service} solution
+
     UsersDynamoDbTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Delete
@@ -153,6 +172,7 @@ resources:
           WriteCapacityUnits: 1
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
+
 
     DeletedUsersDynamoDbTable:
       Type: AWS::DynamoDB::Table

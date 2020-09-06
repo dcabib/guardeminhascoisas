@@ -1,12 +1,15 @@
 {
-  "name": "serverless-jwt-auth",
+  "name": "guardeminhascoisas",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",
   "scripts": {
-    "start": "sls offline start --migrate --skipCacheInvalidation",
-    "test": "JWT_SECRET=123Abc789XYZ jest",
-    "deploy": "sls deploy"
+    "start":            "sls offline start --migrate --skipCacheInvalidation",
+    "unit-tests":        "JWT_SECRET=123Abc789XYZ jest --verbose --silent tests/0-Unit/Helpers/*",
+    "system-tests":      "JWT_SECRET=123Abc789XYZ jest tests/1-Functional/* --verbose --silent",
+    "integration-tests": "JWT_SECRET=123ABC789XYZ jest tests/2-Integration/* --verbose --silent --runInBand",
+    "all-tests":         "JWT_SECRET=123Abc789XYZ jest --verbose --silent --runInBand",
+    "deploy":           "sls deploy"
   },
   "keywords": [],
   "author": "",
@@ -16,13 +19,13 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^8.5.1",
     "middy": "^0.36.0",
-    "serverless-pseudo-parameters": "^2.5.0",
     "uuid": "^8.3.0",
     "validator": "^13.1.1"
   },
   "devDependencies": {
     "jest": "^26.4.2",
     "serverless-dynamodb-local": "^0.2.39",
+    "serverless-pseudo-parameters": "^2.5.0",
     "serverless-plugin-offline-dynamodb-stream": "^1.0.19",
     "serverless-offline": "^3.20.3"
   }

@@ -1,0 +1,36 @@
+#
+# Creates the DynamoDB tables
+#
+# Setup Users Table
+UsersDynamoDbTable:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Delete
+  Properties:
+    TableName: ${self:provider.environment.TABLENAME_USERS}
+    AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+    KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1
+    StreamSpecification:
+    StreamViewType: NEW_AND_OLD_IMAGES
+
+
+DeletedUsersDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    Properties:
+      TableName: ${self:provider.environment.TABLENAME_USERS_DELETED}
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
