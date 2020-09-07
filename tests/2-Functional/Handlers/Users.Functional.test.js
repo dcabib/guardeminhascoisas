@@ -112,7 +112,7 @@ describe('Register', () => {
         });
     });
 
-    it('hould not Register without lastname(error scenario)', async done => {
+    it('Should not Register without lastname(error scenario)', async done => {
         let event = {
             "body": {
                 "firstName": mockNewUserData.firstName,
@@ -133,7 +133,7 @@ describe('Register', () => {
         });
     });
 
-    it('hould not Register without email(error scenario)', async done => {
+    it('Should not Register without email(error scenario)', async done => {
         let event = {
             "body": {
                 "firstName": mockNewUserData.firstName,
@@ -154,7 +154,7 @@ describe('Register', () => {
         });
     });
 
-    it('hould not Register invalid JSON(error scenario)', async done => {
+    it('Should not Register invalid JSON(error scenario)', async done => {
         let event = {
             "headers": {
                 "Content-Type": "application/json",
@@ -167,7 +167,7 @@ describe('Register', () => {
                 if (error)
                     expect(error).toBeDefined();
                 else 
-                    expect(data.statusCode).toBe(500);
+                    expect(data.statusCode).toBe(400);
                 done();
             } catch (error) {
                 done(error);
@@ -182,7 +182,7 @@ describe('Register', () => {
 describe('Login', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: 'reallystrongsecret' }; });
 
-    it('hould Login user with valid credentials', async done => {
+    it('Should Login user with valid credentials', async done => {
         // Mock DB response
 
         // DB will be called by userByEmail - Check if email exsists
@@ -219,7 +219,7 @@ describe('Login', () => {
         });
     });
 
-    it('hould not login user without email (error scenario)', async done => {
+    it('Should not login user without email (error scenario)', async done => {
         let event = {
             "body": {
                 password: newUserAuth.password
@@ -240,7 +240,7 @@ describe('Login', () => {
         });
     });
 
-    it('hould not login user without password (error scenario)', async done => {
+    it('Should not login user without password (error scenario)', async done => {
         let event = {
             "body": {
                 email: newUserAuth.email
@@ -274,7 +274,7 @@ describe('Login', () => {
                 if (error)
                     expect(error).toBeDefined();
                 else 
-                    expect(data.statusCode).toBe(500);
+                    expect(data.statusCode).toBe(400);
                 done();
             } catch (error) {
                 done(error);
@@ -626,7 +626,7 @@ describe('Update user', () => {
                 if (error)
                     expect(error).toBeDefined();
                 else 
-                    expect(data.statusCode).toBe(500);
+                    expect(data.statusCode).toBe(400);
                 done();
             } catch (error) {
                 done(error);
@@ -721,7 +721,7 @@ describe('Delete user', () => {
                 if (error)
                     expect(error).toBeDefined();
                 else 
-                    expect(data.statusCode).toBe(500);
+                    expect(data.statusCode).toBe(400);
                 done();
             } catch (error) {
                 done(error);
@@ -729,7 +729,6 @@ describe('Delete user', () => {
 
         });
     });
-
 });
 
 

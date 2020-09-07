@@ -26,15 +26,23 @@ module.exports = () => {
       //console.debug ("### ApiResponse - onError - Handler: " + handler);
 
       if (handler) {
-        
-        console.debug ("### ApiResponse - onError - There is handler information");
-        handler.response = {
-          statusCode: handler.response.statusCode || 500,
-          body: JSON.stringify({
-            message: handler.error.message || 'Error',
-            data: handler.response.body.data || null,
-          }),
-        };
+
+        if (handler.response) {        
+          console.debug ("### ApiResponse - onError - There is handler information");
+          handler.response = {
+            statusCode: handler.response.statusCode || 500,
+            body: JSON.stringify({
+              message: handler.error.message || 'Error',
+              data: handler.response.body.data || null,
+            }),
+          };
+        } else {
+          console.debug ("### ApiResponse - onError - There is NO handler information - response missing");
+          handler.response = {
+            statusCode: 400,
+            body: JSON.stringify({message: handler.error.message})
+          }
+        }
       } else {
         console.debug ("### ApiResponse - onError - There is NO handler information");
       }

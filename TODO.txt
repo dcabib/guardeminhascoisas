@@ -2,11 +2,11 @@
 OK     Colocar a validaçao de token expirado no Authorizer 
        Implementar lambda layer - https://github.com/markuswagner93/serverless-layers-example
 OK     Corrigir retorno do get "tirar lastUser {}
-       Implementar testes unitarios
-       Implementar testes de handler
+OK     Implementar testes unitarios
+OK     Implementar testes de handler
        Implementar testes de integraçao
        Handler de refresh token
-       Delete com erro
+O      Delete com erro
        Implementar .env
        Utilizar multiplos serverless.yml com webpack
        Fazer testes de handler com Authorizer passando token valido mas expirado

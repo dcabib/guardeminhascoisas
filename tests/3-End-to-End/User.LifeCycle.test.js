@@ -1,10 +1,10 @@
 var axios = require('axios');
 const testURL = 'http://localhost:3000';
+
 const getURL = (path) =>
     process.env.TEST_URL + path
-let userToken
 
-
+let userToken;
 
 /**
  * Tests for Full lifecycle of user
@@ -12,22 +12,22 @@ let userToken
 describe('Full lifecycle of user', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
 
-    const mockNewUserData = {
+    const mockUser1 = {
         firstName: 'John',
         lastName: 'Doe',
         email: (Math.floor(Math.random() * Math.floor(10000))) + 'john@doe.com',
         password: 'abc113adb',
     };
 
-    const mockUpdatedUserData = {
-        firstName: 'John',
+    const mockUser2 = {
+        firstName: 'Mark',
         lastName: 'Smith',
-        email: mockNewUserData.email,
+        email: mockUser1.email,
         password: '123abcd432',
     };
 
-    it('User register', async done => {
-        axios.post(getURL('/register'), mockNewUserData)
+    it('Should register user 1', async done => {
+        await axios.post(getURL('/register'), mockUser1)
             .then((res) => {
                 expect(res.status).toBe(201);
             })
@@ -40,14 +40,12 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-
-    it('Login user', async done => {
-        axios.post(getURL('/login'), {
-            "email": mockNewUserData.email,
-            "password": mockNewUserData.password
+    it('Should login with user 1', async done => {
+        axios.post(getURL('/user'), {
+            "email": mockUser1.email,
+            "password": mockUser1.password
         })
             .then((res) => {
-                console.info(res);
                 expect(res.status).toBe(200);
                 expect(res.data.data.token).toBeDefined();
                 userToken = res.data.data.token;
@@ -61,7 +59,7 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Get user', async done => {
+    it('Should get user 1 information', async done => {
         axios.get(getURL('/user'), {
             headers: {
                 'Authorization': 'Bearer ' + userToken
@@ -69,9 +67,9 @@ describe('Full lifecycle of user', () => {
         })
             .then((res) => {
                 expect(res.status).toBe(200);
-                expect(res.data.data.firstName).toEqual(mockNewUserData.firstName);
-                expect(res.data.data.lastName).toEqual(mockNewUserData.lastName);
-                expect(res.data.data.email).toEqual(mockNewUserData.email);
+                expect(res.data.data.firstName).toEqual(mockUser1.firstName);
+                expect(res.data.data.lastName).toEqual(mockUser1.lastName);
+                expect(res.data.data.email).toEqual(mockUser1.email);
                 expect(res.data.data.lastToken).toEqual(userToken);
             })
             .catch((err) => {
@@ -83,17 +81,17 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Update user (FistName, LastName and Password)', async done => {
-        axios.put(getURL('/user'), mockUpdatedUserData, {
+    it('Should update user 1 (FistName, LastName and Password)', async done => {
+        axios.put(getURL('/user'), mockUser2, {
             headers: {
                 'Authorization': 'Bearer ' + userToken
             }
         })
             .then((res) => {
                 expect(res.status).toBe(200);
-                expect(res.data.data.firstName).toEqual(mockUpdatedUserData.firstName);
-                expect(res.data.data.lastName).toEqual(mockUpdatedUserData.lastName);
-                expect(res.data.data.email).toEqual(mockUpdatedUserData.email);
+                expect(res.data.data.user.Attributes.firstName).toEqual(mockUser2.firstName);
+                expect(res.data.data.user.Attributes.lastName).toEqual(mockUser2.lastName);
+                expect(res.data.data.user.Attributes.email).toEqual(mockUser2.email);
             })
             .catch((err) => {
                 console.error(err && err.response && err.response.data ? err.response.data.message : err);
@@ -104,17 +102,15 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-
-    it('Login user (with old password - error scenario)', async done => {
-        axios.post(getURL('/login'), {
-            "email": mockNewUserData.email,
-            "password": mockNewUserData.password
+    it('Should not login user 1 with old password (error scenario)', async done => {
+        axios.post(getURL('/user'), {
+            "email": mockUser1.email,
+            "password": mockUser1.password
         })
             .then(() => {
                 throw new Error('Test failed');
             })
             .catch((err) => {
-                console.log(JSON.stringify(err.response));
                 expect(err.response.status).toBe(404);
             })
             .then(() => {
@@ -122,13 +118,12 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Login user (with new password)', async done => {
-        axios.post(getURL('/login'), {
-            "email": mockNewUserData.email,
-            "password": mockUpdatedUserData.password
+    it('Should login user 1 with new password', async done => {
+        axios.post(getURL('/user'), {
+            "email": mockUser1.email,
+            "password": mockUser2.password
         })
             .then((res) => {
-                console.info(res);
                 expect(res.status).toBe(200);
                 expect(res.data.data.token).toBeDefined();
                 userToken = res.data.data.token;
@@ -142,7 +137,7 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Delete user', async done => {
+    it('Should delete user 1', async done => {
         axios.delete(getURL('/user'), {
             headers: {
                 'Authorization': 'Bearer ' + userToken
@@ -150,7 +145,6 @@ describe('Full lifecycle of user', () => {
         })
             .then((res) => {
                 expect(res.status).toBe(200);
-                expect(res.data.data.deletedAt).toBeDefined();
             })
             .catch((err) => {
                 console.error(err && err.response && err.response.data ? err.response.data.message : err);
@@ -161,16 +155,15 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Login user (error scenario because user was marked as deleted)', async done => {
+    it('Should not login user 1 (error scenario because user was marked as deleted)', async done => {
         axios.post(getURL('/login'), {
-            "email": mockNewUserData.email,
-            "password": mockUpdatedUserData.password
+            "email": mockUser1.email,
+            "password": mockUser2.password
         })
             .then(() => {
                 throw new Error('Test failed');
             })
             .catch((err) => {
-                console.log(JSON.stringify(err.response));
                 expect(err.response.status).toBe(404);
             })
             .then(() => {
@@ -187,16 +180,15 @@ describe('Full lifecycle of user', () => {
 describe('Full creation of user', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
 
-    const mockNewUserData = {
-        firstName: 'Mark',
+    const mockUser3 = {
+        firstName: 'Mark Macfly',
         lastName: 'Henry',
         email: (Math.floor(Math.random() * Math.floor(10000))) + 'mark@henry.com',
         password: 'abcd321fgt',
     };
 
-
-    it('User register', async done => {
-        axios.post(getURL('/register'), mockNewUserData)
+    it('Should register user 3', async done => {
+        axios.post(getURL('/register'), mockUser3)
             .then((res) => {
                 expect(res.status).toBe(201);
             })
@@ -210,13 +202,12 @@ describe('Full creation of user', () => {
     });
 
 
-    it('Login user', async done => {
-        axios.post(getURL('/login'), {
-            "email": mockNewUserData.email,
-            "password": mockNewUserData.password
+    it('Should login user 3', async done => {
+        axios.post(getURL('/user'), {
+            "email": mockUser3.email,
+            "password": mockUser3.password
         })
             .then((res) => {
-                console.info(res);
                 expect(res.status).toBe(200);
                 expect(res.data.data.token).toBeDefined();
                 userToken = res.data.data.token;
@@ -230,7 +221,7 @@ describe('Full creation of user', () => {
             })
     });
 
-    it('Get user', async done => {
+    it('Should get information of user 3', async done => {
         axios.get(getURL('/user'), {
             headers: {
                 'Authorization': 'Bearer ' + userToken
@@ -238,9 +229,9 @@ describe('Full creation of user', () => {
         })
             .then((res) => {
                 expect(res.status).toBe(200);
-                expect(res.data.data.firstName).toEqual(mockNewUserData.firstName);
-                expect(res.data.data.lastName).toEqual(mockNewUserData.lastName);
-                expect(res.data.data.email).toEqual(mockNewUserData.email);
+                expect(res.data.data.firstName).toEqual(mockUser3.firstName);
+                expect(res.data.data.lastName).toEqual(mockUser3.lastName);
+                expect(res.data.data.email).toEqual(mockUser3.email);
                 expect(res.data.data.lastToken).toEqual(userToken);
             })
             .catch((err) => {
@@ -251,6 +242,5 @@ describe('Full creation of user', () => {
                 done();
             })
     });
-
 });
 

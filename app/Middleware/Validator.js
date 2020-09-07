@@ -61,16 +61,6 @@ module.exports = ({ inputSchema, outputSchema, ajvOptions }) => {
       const valid = validateInput(handler.event)
 
       if (!valid) {
-        // console.info ("Middleware validator - not valid");
-
-        // const error = new createError.BadRequest('Event object failed validation')
-        // handler.event.headers = Object.assign({}, handler.event.headers)
-        // const language = chooseLanguage(handler.event, options.defaultLanguage)
-        // ajvLocalize[language](validateInput.errors)
-
-        // error.details = validateInput.errors
-        // throw error
-
         handler.response = {
           statusCode: 422,
           body: { message: 'Input failed validation', data: validateInput.errors }
@@ -90,11 +80,6 @@ module.exports = ({ inputSchema, outputSchema, ajvOptions }) => {
       const valid = validateOutput(handler.response)
 
       if (!valid) {
-        // const error = new createError.InternalServerError('Response object failed validation')
-        // error.details = validateOutput.errors
-        // error.response = handler.response
-        // throw error
-
         handler.response = {
           statusCode: 500,
           body: { message: 'Output failed validation', data: validateOutput.errors }
@@ -118,14 +103,10 @@ function lazyLoadAjv (options) {
 }
 
 function shouldInitAjv (options) {
-  // console.info ("Middleware shouldInitAjv - start");
-
   return !ajv || areConstructorOptionsNew(options)
 }
 
 function areConstructorOptionsNew (options) {
-  // console.info ("Middleware areConstructorOptionsNew - start");
-
   try {
     deepStrictEqual(options, previousConstructorOptions)
   } catch (e) {
@@ -136,8 +117,6 @@ function areConstructorOptionsNew (options) {
 }
 
 function initAjv (options) {
-  // console.info ("Middleware initAjv - start");
-
   ajv = new Ajv(options)
   ajvKeywords(ajv)
 
