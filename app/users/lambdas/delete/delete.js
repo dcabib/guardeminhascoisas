@@ -29,13 +29,11 @@ const handler = async (event, context, cb) => {
         return cb(null, {statusCode: 404, message: 'User was not found'});
       }
 
-      console.log ("######## user: " + JSON.stringify(foundUser));
-
       return deleteUsers(userId) 
       .then((user) => 
       {
         if (!user) {
-          console.error ("*** Handler delete - Error deleting" + JSON.stringify(user));
+          console.debug ("*** Handler delete - Error deleting" + JSON.stringify(user));
           cb(null, {statusCode: err.statusCode, message: 'Internal Server error while deleting user:' + JSON.stringify(user)});
         } else {
           console.debug ("*** Handler delete - Return was successful deleted");

@@ -32,7 +32,7 @@ const mockNewUserData = {
 describe('JWT Tokens', () => {
   beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123' }; });
 
-  it('should generate token + when decoded, should be equal to input User ID', async () => {
+  it('Should generate token + when decoded, Should be equal to input User ID', async () => {
     const userId = '464b5e40-b2fb-11e8-89b6-b5c77595a2ec';
     const token = await signToken(userId);
 
@@ -46,7 +46,7 @@ describe('JWT Tokens', () => {
  * Tests for userByEmail()
  */
 describe('User lookup by email', () => {
-  it('should load correct user', async () => {
+  it('Should load correct user', async () => {
     // Mock a single user DB response
     DB.scan = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData] })),
@@ -57,7 +57,7 @@ describe('User lookup by email', () => {
     expect(res.email).toEqual(mockExitingUserData.email);
   });
 
-  it('should return null when email was not provided', async () => {
+  it('Should return null when email was not provided', async () => {
     // Mock an empty DB response
     DB.scan = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
@@ -65,7 +65,7 @@ describe('User lookup by email', () => {
     expect(res).toBeNull();
   });
 
-  it('should return null when user not found in DB', async () => {
+  it('Should return null when user not found in DB', async () => {
     // Mock an empty DB response
     DB.scan = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
@@ -78,7 +78,7 @@ describe('User lookup by email', () => {
  * Tests for userById()
  */
 describe('User lookup by ID', () => {
-  it('should load correct user by ID', async () => {
+  it('Should load correct user by ID', async () => {
     // Mock a single user DB response
     DB.get = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
@@ -90,11 +90,11 @@ describe('User lookup by ID', () => {
     expect(res).toBeDefined();
     expect(res.id).toEqual(mockNewUserData.id);
 
-    // Password shouldn't be in response
+    // Password Shouldn't be in response
     expect(res.password).toBeUndefined();
   });
 
-  it('should return null when user was not found in DB', async () => {
+  it('Should return null when user was not found in DB', async () => {
     // Mock an empty DB response
     DB.get = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
@@ -103,7 +103,7 @@ describe('User lookup by ID', () => {
     expect(res).toBeNull();
   });
 
-  it('should return null when user was not found in DB', async () => {
+  it('Should return null when user was not found in DB', async () => {
     // Mock an empty DB response
     DB.get = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
@@ -121,7 +121,7 @@ describe('User lookup by ID', () => {
 describe('Adding User', () => {
   beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123' }; });
   
-  it('should add user', async () => {
+  it('Should add user', async () => {
     // Mock a single user DB response
     DB.put = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({}))
@@ -142,11 +142,11 @@ describe('Adding User', () => {
     expect(res.lastName).toEqual(mockNewUserData.lastName);
     expect(res.email).toEqual(mockNewUserData.email);
 
-    // Password shouldn't be in response
+    // Password Shouldn't be in response
     expect(res.password).toBeUndefined();
   });
 
- it('should should not add user - missing email', async () => {
+ it('Should Should not add user - missing email', async () => {
     // Mock a single user DB response
     DB.put = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData]} )),
@@ -162,7 +162,7 @@ describe('Adding User', () => {
     expect(res).toBeNull();
   });
 
-  it('should should not add user - missing password', async () => {
+  it('Should Should not add user - missing password', async () => {
     // Mock a single user DB response
     DB.get = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({ Item: mockExitingUserData })),
@@ -181,7 +181,7 @@ describe('Adding User', () => {
 describe('Update User and support methods', () => {
   beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123' }; });
   
-  it('should get all update parameters to update user', async () => {
+  it('Should get all update parameters to update user', async () => {
     const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password)
 
     // Should have data
@@ -194,7 +194,7 @@ describe('Update User and support methods', () => {
     expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
   });
 
-  it('should get all update parameters apart of fistName to update user', async () => {
+  it('Should get all update parameters apart of fistName to update user', async () => {
     const res = await createParamsforUpdate (mockNewUserData.id, null, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password)
 
     // Should have data
@@ -208,7 +208,7 @@ describe('Update User and support methods', () => {
     expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
   });
 
-  it('should get all update parameters apart of lastName to update user', async () => {
+  it('Should get all update parameters apart of lastName to update user', async () => {
     const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, null, mockNewUserData.email, mockNewUserData.password)
 
     // Should have data
@@ -222,7 +222,7 @@ describe('Update User and support methods', () => {
     expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
   });
 
-  it('should get all update parameters apart of email to update user', async () => {
+  it('Should get all update parameters apart of email to update user', async () => {
     const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, null, mockNewUserData.password)
 
     // Should have data
@@ -236,7 +236,7 @@ describe('Update User and support methods', () => {
     expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
   });
 
-  it('should get all update parameters apart of password to update user', async () => {
+  it('Should get all update parameters apart of password to update user', async () => {
     const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email)
 
     // Should have data
@@ -250,7 +250,7 @@ describe('Update User and support methods', () => {
     expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
   });
 
-  it('should get all update parameters apart of email password to update user', async () => {
+  it('Should get all update parameters apart of email password to update user', async () => {
     const res = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName)
 
     // Should have data
@@ -264,7 +264,7 @@ describe('Update User and support methods', () => {
     expect(res.ExpressionAttributeValues).toHaveProperty(':ud');
   });
 
-  it('should update user', async () => {
+  it('Should update user', async () => {
     // Mock a single user DB response
     DB.update = jest.fn(() => ({
         promise: () => new Promise(resolve => resolve({ ...mockNewUserData} )),
@@ -286,7 +286,7 @@ describe('Update User and support methods', () => {
     expect(res.updatedAt).toBeDefined();
   });
 
-  it('should not update user - missing mandatory parameters - id', async () => {
+  it('Should not update user - missing mandatory parameters - id', async () => {
     // Mock a single user DB response
     DB.update = jest.fn(() => ({
         promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
@@ -300,7 +300,7 @@ describe('Update User and support methods', () => {
     expect(res).toBeNull();
   });
 
-  it('should not update user - missing mandatory parameters - UpdateExpression', async () => {
+  it('Should not update user - missing mandatory parameters - UpdateExpression', async () => {
     // Mock a single user DB response
     DB.update = jest.fn(() => ({
         promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
@@ -314,7 +314,7 @@ describe('Update User and support methods', () => {
     expect(res).toBeNull();
   });
 
-  it('should not update user - missing mandatory parameters - ExpressionAttributeValues', async () => {
+  it('Should not update user - missing mandatory parameters - ExpressionAttributeValues', async () => {
     // Mock a single user DB response
     DB.update = jest.fn(() => ({
         promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
@@ -333,20 +333,19 @@ describe('Update User and support methods', () => {
  * Tests User Deletion
  */
 describe('User for delete', () => {
-  it('should delete a user', async () => {
+  it('Should delete a user', async () => {
     // Mock a single user DB response
     DB.delete = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData] })),
     }));
 
     const res = await deleteUsers(mockExitingUserData.id);
-
-    expect(res).toBeDefined();
-    expect(res.id).toEqual(mockExitingUserData.id);
-    expect(res.email).toEqual(mockExitingUserData.email);
+    expect(res.Items[0]).toBeDefined();
+    expect(res.Items[0].id).toEqual(mockExitingUserData.id);
+    expect(res.Items[0].email).toEqual(mockExitingUserData.email);
   });
 
-  it('should return null when id was not provided', async () => {
+  it('Should return null when id was not provided', async () => {
     // Mock an empty DB response
     const res = await deleteUsers();
     expect(res).toBeNull();

@@ -25,8 +25,10 @@ const handler = async (event, context, cb) => {
     const id = event.requestContext.authorizer.principalId;
 
     // Checks if there is any possible update into user table
-    if (!firstName && !lastName && !email && !password)
+    if (!firstName && !lastName && !email && !password) {
+      console.debug ("*** Handler update - No user information to update. Please provide at least one parameter (First Name, Last Name, Email or Password)...");
       return cb(null, {statusCode: 400, message: "No user information to update. Please provide at least one parameter (First Name, Last Name, Email or Password)..."});
+    }
 
     console.debug ("*** Handler update - ID from requester: " + id);
     console.debug (`*** Handler update - firstName: ${firstName}, lastName: ${lastName}, email: ${email}, password: ${password}`);
@@ -61,8 +63,7 @@ const handler = async (event, context, cb) => {
         cb(null, {statusCode: err.statusCode, message: 'Internal Server error while updating user:' + JSON.stringify(err)});
     }
   }
-  catch (err) 
-  {
+  catch (err) {
     console.error ("*** Handler update - Internal server error while updating user..." + JSON.stringify(err));
     cb(null, { statusCode: 500, message: 'Handler update - Internal Server error: ' + JSON.stringify(err)});
   }

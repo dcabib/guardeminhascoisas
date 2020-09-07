@@ -269,8 +269,8 @@ module.exports.deleteUsers = (userId) => {
         console.debug("###### Helper - User - deleteUsers - User was not found and was not updated");
         return null;
       } else {
-        console.debug("###### Helper - User - deleteUsers - User was found deleted ...");
-        return user.Items[0];
+        console.debug("###### Helper - User - deleteUsers - User was found and deleted ...");
+        return user;
       }
     });
   } catch (err) {
