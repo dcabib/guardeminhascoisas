@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
-const DB = require('../../../database/db');
+const DB = require('../../database/db');
 
 // Unit Tests
-const { signToken, userByEmail, userById, addUser, updateUser, createParamsforUpdate, deleteUsers } = require('../../../app/users/lambdas/Helpers/UsersModel');
+const { signToken, userByEmail, userById, addUser, updateUser, createParamsforUpdate, deleteUsers } = require('../../app/users/lambdas/Helpers/UsersModel');
 
 const mockExitingUserData = {
   id: '03969310-b0e1-11e8-a48b-efa31124d46c',

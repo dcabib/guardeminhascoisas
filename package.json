@@ -5,10 +5,10 @@
   "main": "handler.js",
   "scripts": {
     "start":             "sls offline start --migrate --skipCacheInvalidation",
-    "unit-tests":        "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent tests/0-Unit/Helpers/*",
-    "system-tests":      "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent tests/1-Functional/*",
-    "integration-tests": "JWT_SECRET=123ABC789XYZ clear && jest --verbose --silent tests/2-Integration/* --runInBand",
-    "e2e-tests":         "JWT_SECRET=123ABC789XYZ clear && jest --verbose --silent tests/3-End-to-End/* --runInBand",
+    "unit-tests":        "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent tests/1-Unit/*",
+    "system-tests":      "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent tests/2-Functional/*",
+    "integration-tests": "JWT_SECRET=123ABC789XYZ clear && jest --verbose --silent tests/3-Integration/* --runInBand",
+    "e2e-tests":         "JWT_SECRET=123ABC789XYZ clear && jest --verbose --silent tests/4-End-to-End/* --runInBand",
     "all-tests":         "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --runInBand",
     "deploy":            "sls deploy"
   },
