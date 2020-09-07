@@ -1,4 +1,0 @@
-{
-    "body": "{\"firstName\":\"Jane\",\"lastName\": \"Jackson\",\"email\": \"jane@jackson.com\",\"password\": \"123Abc\"}"
-}
-

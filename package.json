@@ -6,7 +6,7 @@
   "scripts": {
     "start":             "sls offline start --migrate --skipCacheInvalidation",
     "unit-tests":        "JWT_SECRET=123Abc789XYZ jest --verbose --silent tests/0-Unit/Helpers/*",
-    "system-tests":      "JWT_SECRET=123Abc789XYZ jest tests/1-Functional/* --verbose --silent",
+    "system-tests":      "JWT_SECRET=123Abc789XYZ jest tests/1-Functional/*",
     "integration-tests": "JWT_SECRET=123ABC789XYZ jest tests/2-Integration/* --verbose --silent --runInBand",
     "all-tests":         "JWT_SECRET=123Abc789XYZ jest --verbose --silent --runInBand",
     "deploy":            "sls deploy"

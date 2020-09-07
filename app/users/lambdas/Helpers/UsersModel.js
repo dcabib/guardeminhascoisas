@@ -130,21 +130,18 @@ module.exports.addUser = async (firstName, lastName, email, password) => {
     .then(data => {
       if (data) {
         console.debug("###### Helper - User - addUser - User was created successfully.");
+        delete Item.password;
         return Item;
       } else {
         console.debug("###### Helper - User - addUser - User was not created");
         return null;
       }
     })
-    .then((data) => {
-      console.debug ("###### Helper - User - addUser - Data returned from DB.put(): " + JSON.stringify(data));
-      console.debug("###### Helper - User - addUser - Getting user details with id: " + id);
-      return this.userById(data.id);
-    })
-    .then(user => {
-      console.debug("###### Helper - User - addUser - User information: " + JSON.stringify(user));
-      return user;
-    })
+    // .then((data) => {
+    //   console.debug ("###### Helper - User - addUser - Data returned from DB.put(): " + JSON.stringify(data));
+    //   console.debug("###### Helper - User - addUser - Getting user details with id: " + id);
+    //   return Item;
+    // })
     .catch (err => {
       console.debug("###### Helper - User - addUser - Error adding user: " + JSON.stringify(err));
       return null;
@@ -182,7 +179,7 @@ module.exports.updateUser = (data) => {
         return null;
       } else {
         console.debug("###### Helper - User - updateUser - User was found and updated...");
-        return user.Items[0];
+        return (user);
       }
     });
   } catch (err) {

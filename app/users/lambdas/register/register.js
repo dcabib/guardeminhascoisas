@@ -36,11 +36,14 @@ const handler = async (event, context, cb) => {
           console.debug ("*** Handler register - No user found in DB with provieded email. Insert/Create user into DB");
           const ret =  addUser (firstName, lastName, email, password);
           if (ret) {
-            console.debug ("*** Handler register - User creation / registration sucesful");
-            cb(null, {statusCode: 201, message: 'Success - you are now registered', data: { firstName, lastName, email }})}
+            console.debug ("*** Handler register - User creation / registration succesful");
+            cb(null, {statusCode: 201, message: 'Success - you are now registered', data: { firstName, lastName, email }})
+          } else { 
+            console.debug ("*** Handler register - User creation not executed - internal error");
+            cb(null, {statusCode: 500, message: 'Internal server error creating user', data: { firstName, lastName, email }})
           }
-        }
-      );
+        } 
+      });
     }
     catch (err) {
       console.error ("Handler register - Internal server error while creating the user..." + JSON.stringify(err));

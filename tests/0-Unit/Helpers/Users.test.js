@@ -78,17 +78,17 @@ describe('User lookup by email', () => {
  * Tests for userById()
  */
 describe('User lookup by ID', () => {
-  it('should load correct user', async () => {
+  it('should load correct user by ID', async () => {
     // Mock a single user DB response
     DB.get = jest.fn(() => ({
-      promise: () => new Promise(resolve => resolve({ Item: mockExitingUserData })),
+      promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
     }));
 
     const res = await userById(mockExitingUserData.id);
 
     // Should have data
     expect(res).toBeDefined();
-    expect(res.id).toEqual(mockExitingUserData.id);
+    expect(res.id).toEqual(mockNewUserData.id);
 
     // Password shouldn't be in response
     expect(res.password).toBeUndefined();
@@ -124,7 +124,7 @@ describe('Adding User', () => {
   it('should add user', async () => {
     // Mock a single user DB response
     DB.put = jest.fn(() => ({
-        promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
+      promise: () => new Promise(resolve => resolve({}))
     }));
 
     DB.get = jest.fn(() => ({
@@ -133,9 +133,11 @@ describe('Adding User', () => {
 
     const res = await addUser(mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password);
 
+    console.log (res);
+
     // Should have data
     expect(res).toBeDefined();
-    expect(res.id).toEqual(mockNewUserData.id);
+    expect(res.id).toBeDefined();
     expect(res.firstName).toEqual(mockNewUserData.firstName);
     expect(res.lastName).toEqual(mockNewUserData.lastName);
     expect(res.email).toEqual(mockNewUserData.email);
@@ -265,11 +267,13 @@ describe('Update User and support methods', () => {
   it('should update user', async () => {
     // Mock a single user DB response
     DB.update = jest.fn(() => ({
-        promise: () => new Promise(resolve => resolve({ Items: [mockNewUserData]} )),
+        promise: () => new Promise(resolve => resolve({ ...mockNewUserData} )),
     }));
 
     const params = await createParamsforUpdate (mockNewUserData.id, mockNewUserData.firstName, mockNewUserData.lastName, mockNewUserData.email, mockNewUserData.password)
     const res = await updateUser(params);
+
+    console.log (res);
 
     // Should have data
     expect(res).toBeDefined();

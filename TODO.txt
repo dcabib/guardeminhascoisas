@@ -1,10 +1,10 @@
         Mudar de SCAN para GSI no user by email
  OK     Colocar a validaçao de token expirado no Authorizer 
         Implementar lambda layer - https://github.com/markuswagner93/serverless-layers-example
-        Corrigir retorno do get "tirar lastUser {}
+ OK     Corrigir retorno do get "tirar lastUser {}
         Implementar testes unitarios
         Implementar testes de handler
         Implementar testes de integraçao
         Handler de refresh token
 
-
+       Delete com erro.

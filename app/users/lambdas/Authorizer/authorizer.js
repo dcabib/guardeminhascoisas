@@ -12,6 +12,9 @@ const parseArn = arn => {
 
 module.exports.auth = async event => {
   console.debug ("*** Authentication - auth - starting");
+
+  console.log (JSON.stringify(event));
+
   const token = event.authorizationToken.split(' ')[1];
   
   // Define default DENY authorization
@@ -36,6 +39,7 @@ module.exports.auth = async event => {
     // Try decode de token and catch any exception if not valid or not available
     try {
       console.debug ("*** Authentication - auth - Decoding token with JWT");
+      console.log ("***** SECRET: " + process.env.JWT_SECRET);
       decodedToken = jsonwebtoken.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       console.debug ("*** Authentication - auth - Invalid token");
