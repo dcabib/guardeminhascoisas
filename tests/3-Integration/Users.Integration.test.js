@@ -27,7 +27,7 @@ describe('Register', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
 
     it('Should register a user with valid data', async done => {
-        axios.post(getURL('/register'), mockNewUserData)
+        axios.post(getURL('/user/register'), mockNewUserData)
             .then((res) => {
                 expect(res.status).toBe(201);
             })
@@ -41,9 +41,8 @@ describe('Register', () => {
     });
 
     it('Should not register a user using same email used by another user', async done => {
-        axios.post(getURL('/register'), mockNewUserData)
+        axios.post(getURL('/user/register'), mockNewUserData)
             .then((res) => {
-                // expect(res.status).toBe(409);
                 throw new Error('Test Failed');
             })
             .catch((err) => {
@@ -56,7 +55,7 @@ describe('Register', () => {
     });
 
     it('Should not register a user without firstname (error scenario)', async done => {
-        axios.post(getURL('/register'), {
+        axios.post(getURL('/user/register'), {
             "lastName": "Smith",
             "email": "test@mail.co",
             "password": "abc113adb"
@@ -74,7 +73,7 @@ describe('Register', () => {
     });
 
     it('Should not register a user  lastname (error scenario)', async done => {
-        axios.post(getURL('/register'), {
+        axios.post(getURL('/user/register'), {
             "firstName": "John",
             "email": "test@mail.co",
             "password": "abc113adb"
@@ -92,7 +91,7 @@ describe('Register', () => {
     });
 
     it('Should not register a user  password (error scenario)', async done => {
-        axios.post(getURL('/register'), {
+        axios.post(getURL('/user/register'), {
             "firstName": "John",
             "lastName": "Smith",
             "email": "test@mail.co",
@@ -110,7 +109,7 @@ describe('Register', () => {
     });
 
     it('Should not register a user passing invalid JSON (error scenario)', async done => {
-        axios.post(getURL('/register'), '{"firstName": "John","lastName": "Smith","email": "test@mail.co" "password": "abc123abc"}', {
+        axios.post(getURL('/user/register'), '{"firstName": "John","lastName": "Smith","email": "test@mail.co" "password": "abc123abc"}', {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -127,9 +126,9 @@ describe('Register', () => {
     });
 });
 
-/**
- * Tests for Login
- */
+// /**
+//  * Tests for Login
+//  */
 describe('Login', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
 
@@ -232,7 +231,7 @@ describe('Login', () => {
 });
 
 /**
- * Tests for GET
+ * Tests for GET user
  */
 describe('Get user', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
@@ -279,11 +278,75 @@ describe('Get user', () => {
 
     it('Shoud not get user data without auth token(error scenario)', async done => {
         axios.get(getURL('/user'))
-            .then(() => {
+        .then(() => {
             throw new Error('Test failed');
         })
         .catch((err) => {
             expect(err.response.status).toBe(401);
+        })
+        .then(() => {
+            done();
+        })
+    });
+});
+
+/**
+ * Tests for refreshToken
+ */
+describe('Refresh token from user', () => {
+    beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
+
+    it('Should refresh user token (sucess scenario)', async done => {
+
+        // Getting header for Axios / POST
+        var headerWithToken = setAxiosToken(userToken);
+
+        axios.post(getURL('/user/refreshtoken'), {
+            headers: headerWithToken
+        })
+        .then((res) => {
+            expect(res.status).toBe(200);
+            userToken = res.data.data.token;
+        })
+        .catch((err) => {
+            throw new Error('Test Failed');
+        })
+        .then(() => {
+            done();
+        })
+    });
+
+    it('Shoud not get / refresh user token invalid auth token (error scenario)', async done => {
+
+        // Getting header for Axios / POST
+        var headerWithToken = setAxiosToken(userToken + "asdasdasdasd");
+
+        axios.post(getURL('/user/refreshtoken'), {
+            headers: headerWithToken
+        })
+        .then(() => {
+            throw new Error('Test failed');
+        })
+        .catch((err) => {
+            expect(err.response.status).toBe(403);
+        })
+        .then(() => {
+            done();
+        })
+    });
+
+    it('Shoud not get / refresh user data without auth token(error scenario)', async done => {
+        // Getting header for Axios / POST
+        var headerWithToken = setAxiosToken();
+
+        axios.post(getURL('/user/refreshtoken'), {
+            headers: headerWithToken
+        })
+        .then(() => {
+            throw new Error('Test failed');
+        })
+        .catch((err) => {
+            expect(err.response.status).toBe(403);
         })
         .then(() => {
             done();
@@ -483,7 +546,7 @@ describe('Delete user', () => {
                 throw new Error('Test failed');
             })
             .catch((err) => {
-                expect(err.response.status).toBe(401);
+                expect(err.response.status).toBe(403);
             })
             .then(() => {
                 done();
@@ -524,5 +587,16 @@ describe('Delete user', () => {
             done();
         })
     });
-
 });
+
+/*
+/ Auxiliar function to set header from Axios for POST
+*/
+exports.modules = setAxiosToken = (token) => {
+    // Chedk if no token was provided 
+    if (!token)
+        token = '';
+
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    axios.defaults.headers.post['Content-Type'] = 'application/json; charset=utf-8'
+}

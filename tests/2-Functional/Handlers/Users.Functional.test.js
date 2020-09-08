@@ -7,6 +7,7 @@ const { auth } = require('../../../app/users/lambdas/Authorizer/authorizer');
 const register  = require ("../../../app/users/lambdas/register/register");
 const login = require('../../../app/users/lambdas/login/login');
 const get = require('../../../app/users/lambdas/get/get');
+const refreshToken = require('../../../app/users/lambdas/refreshToken/refreshToken');
 const update = require('../../../app/users/lambdas/update/update');
 const deleteUser = require('../../../app/users/lambdas/delete/delete');
 
@@ -396,6 +397,107 @@ describe('Get user', () => {
         }));
 
         let event = getAuthorizationEventObject ();
+        try {
+            return auth(event).then((data) => { 
+                expect(data).toBeDefined();
+                expect(data.policyDocument.Statement[0].Effect).toBe("Deny");
+                done();
+            });
+        }
+        catch (error) {
+            done(error);
+        }
+    });
+
+    it('Should not get user data with valid but expered auth token (error scenario)', async done => {
+        // Create invalid a event for Authorization 
+        let event = getAuthorizationEventObject ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQwNzAxMTE1LTQ2MzYtNDA4ZS1iNmJlLTA4MDUyZDhjMDAxZiIsImVtYWlsIjoiam9obkBzbWl0aC5jb20iLCJpYXQiOjE1OTkzNDA0NTQsImV4cCI6MTU5OTQyNjg1NH0.TZUjQYqqew4XAsLSEmw6LvsuIovUjMIo63WQGolkJnc");
+        try {
+            return auth(event).then((data) => { 
+                expect(data).toBeDefined();
+                expect(data.policyDocument.Statement[0].Effect).toBe("Deny");
+                done();
+            });
+        }
+        catch (error) {
+            done(error);
+        }
+    });
+});
+
+/**
+ * Tests for refreshToken()
+ */
+describe('Get refreshed user token', () => {
+    beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: 'reallystrongsecret' }; });
+
+    it('Should get/refresh a new user token', async done => {
+        DB.get = jest.fn(() => ({
+            promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
+        }));
+
+        // Create a event for Authorization 
+        let event = getAuthorizationEventObject (mockNewUserData.lastToken);
+        try {
+            return auth(event).then((data) => { 
+                expect(data).toBeDefined();
+                expect(data.policyDocument.Statement[0].Effect).toBe("Allow");
+
+                // Create a event for Handler 
+                let userEvent = getHandlerEventObject (data);
+
+                refreshToken.handler(userEvent, null, (error, data) => {
+                    try {
+                        expect(data.statusCode).toBe(200);
+                        let responseBody = JSON.parse(data.body)
+                        expect(responseBody.data.token).toBeDefined();
+                        done();
+                    } catch (error) {
+                        done(error);
+                    }
+                });
+            });              
+        } catch (err) {
+            console.log (err);
+        } 
+    });
+
+    it('Should not get/refresh user token with invalid auth token (error scenario)', async done => {
+        // Create invalid a event for Authorization 
+        let event = getAuthorizationEventObject ("adsadsadasdasdas");
+        try {
+            return auth(event).then((data) => { 
+                expect(data).toBeDefined();
+                expect(data.policyDocument.Statement[0].Effect).toBe("Deny");
+                done();
+            });
+        }
+        catch (error) {
+            done(error);
+        }
+    });
+
+    it('Should not get/refresh user token without auth token(error scenario)', async done => {
+        DB.get = jest.fn(() => ({
+            promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
+        }));
+
+        let event = getAuthorizationEventObject ();
+        try {
+            return auth(event).then((data) => { 
+                expect(data).toBeDefined();
+                expect(data.policyDocument.Statement[0].Effect).toBe("Deny");
+                done();
+            });
+        }
+        catch (error) {
+            done(error);
+        }
+    });
+
+    it('Should not get/refresh user token with valid but expered auth token (error scenario)', async done => {
+        // Create invalid a event for Authorization 
+        let event = getAuthorizationEventObject ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQwNzAxMTE1LTQ2MzYtNDA4ZS1iNmJlLTA4MDUyZDhjMDAxZiIsImVtYWlsIjoiam9obkBzbWl0aC5jb20iLCJpYXQiOjE1OTkzNDA0NTQsImV4cCI6MTU5OTQyNjg1NH0.TZUjQYqqew4XAsLSEmw6LvsuIovUjMIo63WQGolkJnc");
         try {
             return auth(event).then((data) => { 
                 expect(data).toBeDefined();

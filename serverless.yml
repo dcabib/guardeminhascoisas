@@ -82,7 +82,7 @@ functions:
 
   # General Authorizer for all private APIs
   GeneralAuthorizer:
-    handler: app/users/lambdas/Authorizer/authorizer.auth
+    handler: app/users/lambdas/authorizer/authorizer.auth
 
   # Regiter a user - Public API
   register:
@@ -90,7 +90,7 @@ functions:
     iamRoleConfig: ${self:provider.iamRoleStatements}
     events:
       - http:
-          path: register
+          path: user/register
           method: post
           cors: true
 
@@ -103,6 +103,17 @@ functions:
           path: user
           method: post
           cors: true
+
+  # Revew / Refresh a user's token - Public API
+  refreshToken:
+    handler: app/users/lambdas/refreshToken/refreshToken.handler
+    iamRoleConfig: ${self:provider.iamRoleStatements}
+    events:
+      - http:
+          path: user/refreshtoken
+          method: post
+          cors: true
+          authorizer: GeneralAuthorizer
 
   # Get user information - Private API
   user:
@@ -172,7 +183,6 @@ resources:
           WriteCapacityUnits: 1
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
-
 
     DeletedUsersDynamoDbTable:
       Type: AWS::DynamoDB::Table
