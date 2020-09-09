@@ -30,14 +30,16 @@ module.exports.userByEmail = (email) => {
 
   const params = {
     TableName,
-    FilterExpression: "email = :email",
-    ExpressionAttributeValues: {
-      ":email": sanitizer.normalizeEmail(sanitizer.trim(email)),
-  }};
+    IndexName: 'emailGSI',
+    KeyConditionExpression: "#email = :v_email",
+    ExpressionAttributeNames: {"#email": "email" },
+    ExpressionAttributeValues: {":v_email": email},
+  };
 
   console.debug("###### Helper - User - userByEmail - params: " + JSON.stringify(params));
 
-  return DB.scan(params)
+  try {
+  return DB.query(params)
     .promise()
     .then((res) => { 
       if (res && res.Items && res.Items[0]) {
@@ -53,6 +55,10 @@ module.exports.userByEmail = (email) => {
       console.debug("###### Helper - User - userByEmail - error:" + JSON.stringify(err));
       return null;
     });
+  } catch(err) {
+    console.debug("###### Helper - User - userByEmail - error:" + JSON.stringify(err));
+    return null;
+  };
 }
 
 /**
@@ -68,12 +74,21 @@ module.exports.userById = async (id) => {
     return null;
   }
 
-  return DB.get({ TableName, Key: { id } })
+  const params = {
+    TableName, 
+    Key: {id}, 
+    ConsistentRead: true,
+  }
+  return DB.get(params)
     .promise()
     .then((res) => {
       // Return the user
       if (res && res.Item) {
-        console.debug("###### Helper - User - User was found...");
+        console.debug("###### Helper - User - userById - User was found...");
+        console.debug("###### Helper - User - userById - firstName: " + res.Item.firstName);
+        console.debug("###### Helper - User - userById - lastName: " + res.Item.email);
+        console.debug("###### Helper - User - userById - email: " + res.Item.email);
+        console.debug("###### Helper - User - userById - lastToken: " + res.Item.lastToken);
 
         // We don't want the password shown to users
         if (res.Item.password) 
@@ -81,7 +96,7 @@ module.exports.userById = async (id) => {
 
         return res.Item;
       } else {
-        console.debug("###### Helper - User - User was not found");
+        console.debug("###### Helper - User - userById -  User was not found");
         return null;
       }
       // throw new Error('User not found');
@@ -137,11 +152,7 @@ module.exports.addUser = async (firstName, lastName, email, password) => {
         return null;
       }
     })
-    // .then((data) => {
-    //   console.debug ("###### Helper - User - addUser - Data returned from DB.put(): " + JSON.stringify(data));
-    //   console.debug("###### Helper - User - addUser - Getting user details with id: " + id);
-    //   return Item;
-    // })
+
     .catch (err => {
       console.debug("###### Helper - User - addUser - Error adding user: " + JSON.stringify(err));
       return null;

@@ -6,11 +6,11 @@ OK     Implementar testes unitarios
 OK     Implementar testes de handler
 OK     Implementar testes de integraçao
 OK     Implementar testes de end-2-end
-       Handler de refresh token
+O      Handler de refresh token
 OK     Corrigir erro no Handler Delete
        Implementar .env
        Utilizar multiplos serverless.yml com webpack
-       Fazer testes de handler com Authorizer passando token valido mas expirado
+OK     Fazer testes de handler com Authorizer passando token valido mas expirado
        Verificar se aws-sdk é requisito de dev ou precisa estar no deploy na aws
  OK    Refector do login para colocar o codigo duplicado do refresh token 
        Retirar dos test cases o JWT_SECRET

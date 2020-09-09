@@ -1,5 +1,7 @@
 var axios = require('axios');
 const testURL = 'http://localhost:3000';
+// const testURL = 'https://z6f8vj5yb9.execute-api.us-east-1.amazonaws.com/test';
+
 
 const getURL = (path) =>
     process.env.TEST_URL + path
@@ -32,7 +34,7 @@ describe('Register', () => {
                 expect(res.status).toBe(201);
             })
             .catch((err) => {
-                console.error(err && err.response && err.response.data ? err.response.data.message : err);
+                console.log(JSON.stringify(err));
                 throw new Error('Test Failed');
             })
             .then(() => {
@@ -151,14 +153,14 @@ describe('Login', () => {
     });
 
     it('Shdould not login without email (error scenario)', async done => {
-        axios.post(getURL('/login'), {
+        axios.post(getURL('/user'), {
             "password": mockNewUserData.password
         })
         .then(() => {
             throw new Error('Test failed');
         })
         .catch((err) => {
-            expect(err.response.status).toBe(404);
+            expect(err.response.status).toBe(422);
         })
         .then(() => {
             done();
@@ -166,14 +168,14 @@ describe('Login', () => {
     });
 
     it('Shdould not login without a valid password (error scenario)', async done => {
-        axios.post(getURL('/login'), {
+        axios.post(getURL('/user'), {
             "email": mockNewUserData.email,
         })
         .then(() => {
             throw new Error('Test failed');
         })
         .catch((err) => {
-            expect(err.response.status).toBe(404);
+            expect(err.response.status).toBe(422);
         })
         .then(() => {
             done();
@@ -181,7 +183,7 @@ describe('Login', () => {
     });
 
     it('Shdould not login with invalid JSON (error scenario)', async done => {
-        axios.post(getURL('/login'), '{"email": "email, "password"= "abc123abc"}', {
+        axios.post(getURL('/user'), '{"email": "email, "password"= "abc123abc"}', {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -198,7 +200,7 @@ describe('Login', () => {
     });
 
     it('hdould not login with unregistered email (error scenario)', async done => {
-        axios.post(getURL('/login'), {
+        axios.post(getURL('/user'), {
             "email": 'invalid' + mockNewUserData.email,
             "password": mockNewUserData.password
         })
@@ -214,7 +216,7 @@ describe('Login', () => {
     });
 
     it('hdould not login with invalid password (error scenario)', async done => {
-        axios.post(getURL('/login'), {
+        axios.post(getURL('/user'), {
             "email": mockNewUserData.email,
             "password": 'invalid' + mockNewUserData.password
         })
@@ -250,7 +252,7 @@ describe('Get user', () => {
             expect(res.data.data.lastToken).toEqual(userToken);
         })
         .catch((err) => {
-            console.error(err && err.response && err.response.data ? err.response.data.message : err);
+            console.log(JSON.stringify(err));
             throw new Error('Test Failed');
         })
         .then(() => {
@@ -373,7 +375,7 @@ describe('Update user', () => {
             expect(res.data.data.user.Attributes.email).toEqual(mockUpdatedUserData.email);
         })
         .catch((err) => {
-            console.error(err && err.response && err.response.data ? err.response.data.message : err);
+            console.log(JSON.stringify(err));
             throw new Error('Test Failed');
         })
         .then(() => {
@@ -394,7 +396,7 @@ describe('Update user', () => {
             expect(res.data.data.user.Attributes.firstName).toEqual(mockNewUserData.firstName);
         })
         .catch((err) => {
-            console.error(err && err.response && err.response.data ? err.response.data.message : err);
+            console.log(JSON.stringify(err));
             throw new Error('Test Failed');
         })
         .then(() => {
@@ -415,7 +417,7 @@ describe('Update user', () => {
             expect(res.data.data.user.Attributes.lastName).toEqual(mockNewUserData.lastName);
         })
         .catch((err) => {
-            console.error(err && err.response && err.response.data ? err.response.data.message : err);
+            console.log(JSON.stringify(err));
             throw new Error('Test Failed');
         })
         .then(() => {
@@ -436,7 +438,7 @@ describe('Update user', () => {
             expect(res.data.data.user.Attributes.lastName).toEqual(mockNewUserData.lastName);
         })
         .catch((err) => {
-            console.error(err && err.response && err.response.data ? err.response.data.message : err);
+            console.log(JSON.stringify(err));
             throw new Error('Test Failed');
         })
         .then(() => {
@@ -580,7 +582,7 @@ describe('Delete user', () => {
             expect(res.status).toBe(200);
         })
         .catch((err) => {
-            console.error(err && err.response && err.response.data ? err.response.data.message : err);
+            console.log(JSON.stringify(err));
             throw new Error('Test Failed');
         })
         .then(() => {

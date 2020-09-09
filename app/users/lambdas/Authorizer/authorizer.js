@@ -39,7 +39,6 @@ module.exports.auth = async event => {
     // Try decode de token and catch any exception if not valid or not available
     try {
       console.debug ("*** Authentication - auth - Decoding token with JWT");
-      console.log ("***** SECRET: " + process.env.JWT_SECRET);
       decodedToken = jsonwebtoken.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       console.debug ("*** Authentication - auth - Invalid token");
@@ -53,36 +52,37 @@ module.exports.auth = async event => {
       const userEmail = decodedToken.email;
 
       // Check if the token is the same stored in LastToken 
-      console.debug (`*** Handler update - Getting lastToken from user: ${userId}.`);
+      console.debug (`*** Authentication - auth - Getting lastToken from user: ${userId}.`);
       const findRealUser = await userById(userId); 
 
-      if (!findRealUser || (findRealUser.lastToken != token)) {
-        if (!findRealUser) { 
-          console.debug ("*** Handler update - No previous token was found");
-        } else {
-          console.debug ("*** Handler update - lastToken: " + findRealUser.lastToken);
-        }
-        console.debug ("*** Handler update - token from header: " + token);
+      if (findRealUser) {
+        console.debug (`*** Authentication - auth - Same user had previosly logged in...`);
 
-        console.debug ("*** Handler update - WARNING: Valid token but does not belongs to this user or expired");
-        return authResponse;
-      }
+        if (findRealUser.lastToken) {
+          console.debug (`*** Authentication - auth - lastToken: ${findRealUser.lastToken}` );
+          console.debug (`*** Authentication - auth - session / decoded Token: ${token}`);
 
-      console.debug ("*** Authentication - auth - userId: " + userId + " userEmail: " + userEmail);
-      console.debug ("*** Authentication - auth - token: " + JSON.stringify(decodedToken));
+          if (findRealUser.lastToken != token) {
+            console.debug ("*** Authentication - auth - WARNING: Valid token but does not belongs to this user or expired");
+          } else {
+            // User was found and last token is same provided in the session token
+            console.debug ("*** Authentication - auth - userId: " + userId + " userEmail: " + userEmail);
+            console.debug ("*** Authentication - auth - token: " + token);
 
-      authResponse = {
-        principalId: userId,
-        policyDocument: {
-          Version: '2012-10-17',
-          Statement: [
-            {
-              Effect: 'Allow',
-              Resource: `arn:aws:${service}:${region}:${accountId}:${apiId}/${stage}/*`,
-              Action: ['execute-api:Invoke'],
-            },
-          ],
-        },
+            console.debug ("*** Authentication - auth - Success... User is authorized");
+    
+            // Authorize user to move on in this request
+            authResponse = {
+              principalId: userId,
+              policyDocument: {
+                Version: '2012-10-17',
+                Statement: [{
+                    Effect: 'Allow',
+                    Resource: `arn:aws:${service}:${region}:${accountId}:${apiId}/${stage}/*`,
+                    Action: ['execute-api:Invoke'],
+                  },],},}
+          }
+        } 
       };
     }
 

@@ -55,7 +55,7 @@ describe('Register', () => {
 
     it('Should Register with valid data', async done => {
         // Mock DB response
-        DB.scan = jest.fn(() => ({
+        DB.query = jest.fn(() => ({
             promise: () => new Promise(reject => resolve({ Item: {...mockNewUserData} })),
         }));
         DB.put = jest.fn(() => ({
@@ -187,7 +187,7 @@ describe('Login', () => {
         // Mock DB response
 
         // DB will be called by userByEmail - Check if email exsists
-        DB.scan = jest.fn(() => ({
+        DB.query = jest.fn(() => ({
             promise: () => new Promise(resolve => resolve({ Items: [{...mockNewUserData}] })),
         }));
 
@@ -286,7 +286,7 @@ describe('Login', () => {
 
     it('Should not login with unregistered email (error scenario)', async done => {
         // Mock DB response
-        DB.scan = jest.fn(() => ({
+        DB.query = jest.fn(() => ({
             promise: () => new Promise(resolve => resolve(null)),
         }));
 
@@ -312,7 +312,7 @@ describe('Login', () => {
 
     it('Should not login with invalid password (error scenario)', async done => {
         // Mock DB response
-        DB.scan = jest.fn(() => ({
+        DB.query = jest.fn(() => ({
             promise: () => new Promise(resolve => resolve({ Items: [{...mockNewUserData}] })),
         }));
 
@@ -678,7 +678,7 @@ describe('Update user', () => {
         DB.get = jest.fn(() => ({
             promise: () => new Promise(resolve => resolve({ Item: {...mockNewUserData} })),
         }));
-        DB.scan = jest.fn(() => ({
+        DB.query = jest.fn(() => ({
             promise: () => new Promise(resolve => resolve({ Items: [{...mockExitingUserData}] })),
         }));
         DB.update = jest.fn(() => ({

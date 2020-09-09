@@ -61,7 +61,8 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${self:custom.env.REGION}:496714466045:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
+      Resource: ["arn:aws:dynamodb:${self:custom.env.REGION}:496714466045:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
+                ]
 
   iamRoleStatements:
     - Effect: Allow
@@ -73,7 +74,9 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS}",
-                 "arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS_DELETED}"]
+                 "arn:aws:dynamodb:${self:custom.env.REGION}:496714466045:table/${self:provider.environment.TABLENAME_USERS}/index/*",
+                 "arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS_DELETED}"
+                ]
 
 #
 # Lambnda / Functions / Methods
@@ -81,7 +84,7 @@ provider:
 functions:
 
   # General Authorizer for all private APIs
-  GeneralAuthorizer:
+  authorizer:
     handler: app/users/lambdas/authorizer/authorizer.auth
 
   # Regiter a user - Public API
@@ -104,6 +107,7 @@ functions:
           method: post
           cors: true
 
+
   # Revew / Refresh a user's token - Public API
   refreshToken:
     handler: app/users/lambdas/refreshToken/refreshToken.handler
@@ -113,7 +117,7 @@ functions:
           path: user/refreshtoken
           method: post
           cors: true
-          authorizer: GeneralAuthorizer
+          authorizer: authorizer
 
   # Get user information - Private API
   user:
@@ -124,7 +128,7 @@ functions:
           path: user
           method: get
           cors: true
-          authorizer: GeneralAuthorizer
+          authorizer: authorizer
 
   # Update user information - Private API
   userUpdate:
@@ -135,7 +139,7 @@ functions:
           path: user
           method: put
           cors: true
-          authorizer: GeneralAuthorizer
+          authorizer: authorizer
 
   # Delete user  - Private API
   delete:
@@ -146,7 +150,7 @@ functions:
           path: user
           method: delete
           cors: true
-          authorizer: GeneralAuthorizer
+          authorizer: authorizer
 
   # Stream deleted user information to backup table - AWS EVENT
   user_stream_listener:
@@ -175,13 +179,25 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
+          - AttributeName: email
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
+          ReadCapacityUnits:  1
           WriteCapacityUnits: 1
-        StreamSpecification:
+        GlobalSecondaryIndexes:  # GSI for email as a key
+        - IndexName: emailGSI
+          KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+          Projection:
+            ProjectionType: 'ALL' 
+          ProvisionedThroughput:
+            ReadCapacityUnits:  1
+            WriteCapacityUnits: 1
+        StreamSpecification:      # Stream for collect deleting users information
           StreamViewType: NEW_AND_OLD_IMAGES
 
     DeletedUsersDynamoDbTable:

@@ -48,7 +48,7 @@ describe('JWT Tokens', () => {
 describe('User lookup by email', () => {
   it('Should load correct user', async () => {
     // Mock a single user DB response
-    DB.scan = jest.fn(() => ({
+    DB.query = jest.fn(() => ({
       promise: () => new Promise(resolve => resolve({ Items: [mockExitingUserData] })),
     }));
 
@@ -59,7 +59,7 @@ describe('User lookup by email', () => {
 
   it('Should return null when email was not provided', async () => {
     // Mock an empty DB response
-    DB.scan = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
+    DB.query = jest.fn(() => ({ promise: () => new Promise(resolve => resolve({})) }));
 
     const res = await userByEmail();
     expect(res).toBeNull();
