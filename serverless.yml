@@ -1,6 +1,6 @@
 service: ${self:custom.env.NAME}
 
-frameworkVersion: ">=1.1.0 <2.0.0"
+frameworkVersion: ">=1.1.0"
 
 plugins:
   - serverless-dynamodb-local
@@ -61,7 +61,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: ["arn:aws:dynamodb:${self:custom.env.REGION}:496714466045:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
+      Resource: ["arn:aws:dynamodb:${self:custom.env.REGION}:*:table/${self:provider.environment.TABLENAME_USERS}/stream/*"
                 ]
 
   iamRoleStatements:
@@ -73,9 +73,9 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS}",
-                 "arn:aws:dynamodb:${self:custom.env.REGION}:496714466045:table/${self:provider.environment.TABLENAME_USERS}/index/*",
-                 "arn:aws:dynamodb:${opt:region, self:provider.region}:496714466045:table/${self:provider.environment.TABLENAME_USERS_DELETED}"
+      Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS}",
+                 "arn:aws:dynamodb:${self:custom.env.REGION}:*:table/${self:provider.environment.TABLENAME_USERS}/index/*",
+                 "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.TABLENAME_USERS_DELETED}"
                 ]
 
 #
@@ -85,7 +85,7 @@ functions:
 
   # General Authorizer for all private APIs
   authorizer:
-    handler: app/users/lambdas/authorizer/authorizer.auth
+    handler: app/users/lambdas/Authorizer/authorizer.auth
 
   # Regiter a user - Public API
   register:
@@ -117,7 +117,9 @@ functions:
           path: user/refreshtoken
           method: post
           cors: true
-          authorizer: authorizer
+          authorizer:
+            name: authorizer
+            resultTtlInSeconds: 0
 
   # Get user information - Private API
   user:
@@ -128,7 +130,9 @@ functions:
           path: user
           method: get
           cors: true
-          authorizer: authorizer
+          authorizer:
+            name: authorizer
+            resultTtlInSeconds: 0
 
   # Update user information - Private API
   userUpdate:
@@ -139,7 +143,9 @@ functions:
           path: user
           method: put
           cors: true
-          authorizer: authorizer
+          authorizer:
+            name: authorizer
+            resultTtlInSeconds: 0
 
   # Delete user  - Private API
   delete:
@@ -150,7 +156,9 @@ functions:
           path: user
           method: delete
           cors: true
-          authorizer: authorizer
+          authorizer:
+            name: authorizer
+            resultTtlInSeconds: 0
 
   # Stream deleted user information to backup table - AWS EVENT
   user_stream_listener:

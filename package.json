@@ -3,19 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",
-  "jest": {
-    "setupFiles": [
-      "dotenv/config"
-    ]
-  },
   "scripts": {
-    "start":             "sls offline start --migrate --skipCacheInvalidation",
-    "unit-tests":        "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --env=node tests/1-Unit/*",
-    "system-tests":      "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --env=node tests/2-System/*",
+    "start": "sls offline start --migrate --skipCacheInvalidation",
+    "unit-tests": "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --env=node tests/1-Unit/*",
+    "system-tests": "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --env=node tests/2-System/*",
     "integration-tests": "JWT_SECRET=123ABC789XYZ clear && jest --verbose --silent --env=node tests/3-Integration/* --runInBand",
-    "e2e-tests":         "JWT_SECRET=123ABC789XYZ clear && jest --env=node tests/4-End-to-End/* --runInBand",
-    "all-tests":         "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --env=node --runInBand",
-    "deploy":            "sls deploy"
+    "e2e-tests": "JWT_SECRET=123ABC789XYZ clear && jest --verbose --silent --env=node tests/4-End-to-End/* --runInBand",
+    "all-tests": "JWT_SECRET=123Abc789XYZ clear && jest --verbose --silent --env=node --runInBand",
+    "deploy": "sls deploy"
   },
   "keywords": [],
   "author": "",

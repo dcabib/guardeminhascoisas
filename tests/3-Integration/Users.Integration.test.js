@@ -1,6 +1,6 @@
 var axios = require('axios');
-const testURL = 'http://localhost:3000';
-// const testURL = 'https://z6f8vj5yb9.execute-api.us-east-1.amazonaws.com/test';
+// const testURL = 'http://localhost:3000';
+const testURL = 'https://3b83n4kgh4.execute-api.us-east-1.amazonaws.com/test';
 
 
 const getURL = (path) =>
@@ -558,7 +558,7 @@ describe('Delete user', () => {
     it('Should not delete user providing invalid auth token(error scenario)', async done => {
         axios.delete(getURL('/user'), {
             headers: {
-                'Authorization': 'Bearer ' + userToken + "123" 
+                'Authorization': 'Bearer ' + userToken + "123"
             }
         })
         .then(() => {
@@ -595,7 +595,7 @@ describe('Delete user', () => {
 / Auxiliar function to set header from Axios for POST
 */
 exports.modules = setAxiosToken = (token) => {
-    // Chedk if no token was provided 
+    // Chedk if no token was provided
     if (!token)
         token = '';
 

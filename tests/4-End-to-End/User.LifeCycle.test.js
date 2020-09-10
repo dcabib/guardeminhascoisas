@@ -1,13 +1,12 @@
 var axios = require('axios');
-const testURL = 'http://localhost:3000';
-// const testURL = 'https://75wjns76h0.execute-api.us-east-1.amazonaws.com/test';
+// const testURL = 'http://localhost:3000';
+const testURL = 'https://3b83n4kgh4.execute-api.us-east-1.amazonaws.com/test';
 
 const getURL = (path) =>
     process.env.TEST_URL + path
 
 let userToken;           // it will be used to store user token after login to be used in get / udate / delete melhods
 let oldLoginUserToken;   // it will be used to store old user token after login with new credentials
-
 
 /**
  * Tests for Full lifecycle of user
@@ -129,7 +128,7 @@ describe('Full lifecycle of user', () => {
             .then((res) => {
                 expect(res.status).toBe(200);
                 expect(res.data.data.token).toBeDefined();
-                oldLoginUserToken = userToken;
+                oldLoginUserToken = userToken.slice(0);
                 userToken = res.data.data.token;
             })
             .catch((err) => {
@@ -163,7 +162,6 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    if (false) {
     it('Should not get user 2 information with old credentials (token)', async done => {
         axios.get(getURL('/user'), {
             headers: {
@@ -171,34 +169,27 @@ describe('Full lifecycle of user', () => {
             }
         })
             .then((res) => {
-                expect(res.status).toBe(200);
-                expect(res.data.data.firstName).toEqual(mockUser2.firstName);
-                expect(res.data.data.lastName).toEqual(mockUser2.lastName);
-                expect(res.data.data.email).toEqual(mockUser2.email);
-                expect(res.data.data.lastToken).toEqual(userToken);
+                throw new Error('Test Failed');
             })
             .catch((err) => {
-                console.log(JSON.stringify(err));
-                throw new Error('Test Failed');
+                console.log (JSON.stringify(err));
+                expect(err.response.status).toBe(403);
             })
             .then(() => {
                 done();
             })
     });
-}
+
     it('Should refresh token for user 2', async done => {
-        // Getting header for Axios / POST
-        // var headerWithToken = setAxiosToken(userToken);
- 
-        axios.post(getURL('/user/refreshtoken'), {
+        axios.post(getURL('/user/refreshtoken'), {}, {
             headers: {
-                'Authorization': 'Bearer ' + oldLoginUserToken
+                'Authorization': 'Bearer ' + userToken
             }
         })
          .then((res) => {
              expect(res.status).toBe(200);
              expect(res.data.data.token).toBeDefined();
-             oldRefreshUserToken = userToken;
+             oldRefreshUserToken = userToken.slice(0);
              userToken = res.data.data.token;
          })
          .catch((err) => {
@@ -209,14 +200,9 @@ describe('Full lifecycle of user', () => {
              done();
          })
     });
- 
-    if (false) {// issue with glocal idenx not provide strong consistency
+
     it('Should not get user 2 information using first token (before updating credentials)', async done => {
-
-        // Getting header for Axios / POST
-        // var headerWithToken = setAxiosToken(userToken);
-
-        axios.post(getURL('/user/refreshtoken'), {
+        axios.post(getURL('/user/refreshtoken'), {}, {
             headers: {
                 'Authorization': 'Bearer ' + oldLoginUserToken
             }
@@ -233,15 +219,11 @@ describe('Full lifecycle of user', () => {
                 done();
             })
     });
-}
- 
-    it('Should get user 2 information using new token', async done => {
-        // Getting header for Axios / POST
-        // var headerWithToken = setAxiosToken(userToken);
 
+    it('Should get user 2 information using new token', async done => {
         axios.get(getURL('/user'), {
             headers: {
-                'Authorization': 'Bearer ' + oldLoginUserToken
+                'Authorization': 'Bearer ' + userToken
             }
         })
             .then((res) => {
@@ -259,11 +241,8 @@ describe('Full lifecycle of user', () => {
                 done();
             })
     });
- 
-    it('Should not delete user 1 - user does not exists', async done => {
-        // Getting header for Axios / POST
-        // var headerWithToken = setAxiosToken(userToken);
 
+    it('Should not delete user 1 - user does not exists', async done => {
         axios.delete(getURL('/user'), {
             headers: {
                 'Authorization': 'Bearer ' + oldLoginUserToken
@@ -273,8 +252,7 @@ describe('Full lifecycle of user', () => {
                 throw new Error('Test Failed');
             })
             .catch((err) => {
-                // console.log(JSON.stringify(err));
-                // expect(err.response.status).toBe(403);
+                expect(err.response.status).toBe(403);
                 done();
             })
             .then(() => {
@@ -282,27 +260,15 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Should delete user 2', async done => {     
-        axios.interceptors.request.use(request => {
-            console.log('Starting Request', request)
-            return request
-          })
-          
-          axios.interceptors.response.use(response => {
-            console.log('Response:', response)
-            return response
-          })
-
-        // Getting header for Axios / POST
-        // var headerWithToken = setAxiosToken(userToken);
+    it('Should delete user 2', async done => {
 
         axios.delete(getURL('/user'), {
             headers: {
-                'Authorization': 'Bearer ' + oldLoginUserToken
+                'Authorization': 'Bearer ' + userToken
             }
         })
             .then((res) => {
-                // expect(res.status).toBe(200);
+                expect(res.status).toBe(200);
             })
             .catch((err) => {
                 console.log (err);
@@ -313,7 +279,6 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    if (false) {
     it('Should not login user 1 (error scenario because user was marked as deleted)', async done => {
         axios.post(getURL('/user'), {
             "email": mockUser1.email,
@@ -330,7 +295,7 @@ describe('Full lifecycle of user', () => {
             })
     });
 
-    it('Should not login user 2 (error scenario because user was marked as deleted)', async done => {        
+    it('Should not login user 2 (error scenario because user was marked as deleted)', async done => {
         axios.post(getURL('/user'), {
             "email": mockUser2.email,
             "password": mockUser2.password
@@ -345,15 +310,12 @@ describe('Full lifecycle of user', () => {
                 done();
             })
     });
-}
 });
 
 
 /**
  * Tests for Full creation of user
  */
-if (false) {
-
 describe('Full creation of user', () => {
     beforeEach(() => { jest.resetModules(); process.env = { JWT_SECRET: '123Abc123', TEST_URL: testURL }; });
 
@@ -420,17 +382,4 @@ describe('Full creation of user', () => {
             })
     });
 });
-}
 
-/*
-/ Auxiliar function to set header from Axios for POST
-*/
-// exports.modules = setAxiosToken = (token) => {
-//     // Chedk if no token was provided 
-//     if (!token)
-//         token = '';
-
-//     axios.defaults.headers['Authorization'] = `Bearer ${token}`;
-//     axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
-//     axios.defaults.headers.delete['Content-Type'] = 'application/x-www-form-urlencoded';
-// }
